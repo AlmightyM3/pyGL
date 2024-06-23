@@ -1,5 +1,6 @@
 import math
 import ctypes
+import os
 
 import pygame
 
@@ -7,6 +8,10 @@ import OpenGL.GL as GL
 import OpenGL.GLU as GLU
 
 from numpy import array, dot, eye, zeros, float32, uint32
+
+from Shader import Shader
+
+dirPath = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
     # Make a openGL compatable window
@@ -56,60 +61,15 @@ if __name__ == "__main__":
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL.GL_STATIC_DRAW)
 
 
-    vertexShaderSource = '''#version 330 core
-    layout (location = 0) in vec3 aPos;
-    layout (location = 1) in vec3 aColor;
-    out vec3 Color;
-
-    void main()
-    {
-        gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-        Color = aColor;
-    }'''
-    vertexShader = GL.glCreateShader(GL.GL_VERTEX_SHADER)
-    GL.glShaderSource(vertexShader, vertexShaderSource)
-    GL.glCompileShader(vertexShader)
-
-    log = GL.glGetShaderInfoLog(vertexShader)
-    if isinstance(log, bytes):
-        log = log.decode()
-    for line in log.split("\n"):
-        print(line)
-
-    fragmentShaderSource = '''#version 330 core
-    in vec3 Color;
-    out vec4 FragColor;
-    void main()
-    {
-        FragColor = vec4(Color, 1.0f);
-    } '''
-    fragmentShader = GL.glCreateShader(GL.GL_FRAGMENT_SHADER)
-    GL.glShaderSource(fragmentShader, fragmentShaderSource)
-    GL.glCompileShader(fragmentShader)
+    theShader = Shader(dirPath+"/shaders/shader.vert", dirPath+"/shaders/shader.frag")
     
-    log = GL.glGetShaderInfoLog(fragmentShader)
-    if isinstance(log, bytes):
-        log = log.decode()
-    for line in log.split("\n"):
-        print(line)
-
-    shaderProgram = GL.glCreateProgram()
-    GL.glAttachShader(shaderProgram, vertexShader)
-    GL.glAttachShader(shaderProgram, fragmentShader)
-    GL.glLinkProgram(shaderProgram)
-    GL.glUseProgram(shaderProgram)
-    
-    GL.glDeleteShader(vertexShader)
-    GL.glDeleteShader(fragmentShader)
-    
-
     while run:
         pygame.display.set_caption(f"3D! | dt:{DT}, fps:{1000/DT}")
 
         GL.glClearColor(0.2, 0.3, 0.3, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
-        GL.glUseProgram(shaderProgram)
+        theShader.use()
         GL.glBindVertexArray(VAO)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
 

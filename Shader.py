@@ -3,7 +3,8 @@ import OpenGL.GL as GL
 class Shader:  
     def __init__(self, vertexPath, fragmentPath):
         with open(vertexPath, 'r') as file:
-            vertexShaderSource = file
+            vertexShaderSource = file.read()
+            
         
         vertexShader = GL.glCreateShader(GL.GL_VERTEX_SHADER)
         GL.glShaderSource(vertexShader, vertexShaderSource)
@@ -16,7 +17,7 @@ class Shader:
             print(line)
 
         with open(fragmentPath, 'r') as file:
-            fragmentShaderSource = file
+            fragmentShaderSource = file.read()
         
         fragmentShader = GL.glCreateShader(GL.GL_FRAGMENT_SHADER)
         GL.glShaderSource(fragmentShader, fragmentShaderSource)
