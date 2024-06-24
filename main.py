@@ -22,18 +22,16 @@ if __name__ == "__main__":
     DT = 1.0
     run = True
 
-    vertices = zeros(4, [("vertex_position", float32, 3), ("vertex_color", float32, 3)])
+    vertices = zeros(3, [("vertex_position", float32, 3), ("vertex_color", float32, 3)])
     vertices["vertex_position"] = [
-        [ 0.5,  0.5, 0.0],
+        [ 0.0,  0.5, 0.0],
         [ 0.5, -0.5, 0.0],
-        [-0.5, -0.5, 0.0],
-        [-0.5,  0.5, 0.0]
+        [-0.5, -0.5, 0.0]
     ]
     vertices["vertex_color"] = [
         [0.0, 0.0, 1.0],
         [0.0, 1.0, 0.0],
-        [1.0, 0.0, 0.0],
-        [0.8, 0.4, 0.6]
+        [1.0, 0.0, 0.0]
     ]
     
     VBO = GL.glGenBuffers(1)
@@ -51,8 +49,7 @@ if __name__ == "__main__":
 
     indices = array(
         [
-            0, 1, 3,
-            1, 2, 3
+            0, 1, 2
         ],
         dtype=uint32,
     )
@@ -70,6 +67,7 @@ if __name__ == "__main__":
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         theShader.use()
+        theShader.setFloat("xOffset", 0.4)
         GL.glBindVertexArray(VAO)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
 
