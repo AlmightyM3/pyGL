@@ -4,7 +4,6 @@ class Shader:
     def __init__(self, vertexPath, fragmentPath):
         with open(vertexPath, 'r') as file:
             vertexShaderSource = file.read()
-            
         
         vertexShader = GL.glCreateShader(GL.GL_VERTEX_SHADER)
         GL.glShaderSource(vertexShader, vertexShaderSource)
@@ -14,6 +13,8 @@ class Shader:
         if isinstance(log, bytes):
             log = log.decode()
         for line in log.split("\n"):
+            if line == "":
+                continue
             print(line)
 
         with open(fragmentPath, 'r') as file:
@@ -27,6 +28,8 @@ class Shader:
         if isinstance(log, bytes):
             log = log.decode()
         for line in log.split("\n"):
+            if line == "":
+                continue
             print(line)
 
         self.ID = GL.glCreateProgram()
@@ -38,6 +41,8 @@ class Shader:
         if isinstance(log, bytes):
             log = log.decode()
         for line in log.split("\n"):
+            if line == "":
+                continue
             print(line)
         
         GL.glDeleteShader(vertexShader)
