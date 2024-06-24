@@ -47,8 +47,8 @@ class Shader:
         GL.glUseProgram(self.ID)
     
     def setBool(self, name, value):
-        GL.glUniform1i(GL.glGetUniformLocation(self.ID, name.c_str()), int(value))
+        GL.glUniform1i(GL.glGetUniformLocation(self.ID, name), int(value))
     def setInt(self, name, value):
-        GL.glUniform1i(GL.glGetUniformLocation(self.ID, name.c_str()), value)
+        GL.glUniform1i(GL.glGetUniformLocation(self.ID, name), value)
     def setFloat(self, name, value):
-        GL.glUniform1f(GL.glGetUniformLocation(self.ID, name.c_str()), value)
+        GL.glUniform1f(GL.glGetUniformLocation(self.ID, name), value)
