@@ -1,13 +1,12 @@
 import math
 import ctypes
 import os
-
 import pygame
-
 import OpenGL.GL as GL
 import OpenGL.GLU as GLU
+import numpy
 
-from numpy import array, dot, eye, zeros, float32, uint32
+from PIL import Image
 
 from Shader import Shader
 
@@ -22,7 +21,7 @@ if __name__ == "__main__":
     DT = 1.0
     run = True
 
-    vertices = zeros(4, [("vertex_position", float32, 3), ("vertex_color", float32, 3)])
+    vertices = numpy.zeros(4, [("vertex_position", numpy.float32, 3), ("vertex_color", numpy.float32, 3), ("texture_cords", numpy.float32, 2)])
     vertices["vertex_position"] = [
         [ 0.5,  0.5, 0.0],
         [ 0.5, -0.5, 0.0],
@@ -34,6 +33,12 @@ if __name__ == "__main__":
         [0.0, 1.0, 0.0],
         [1.0, 0.0, 0.0],
         [0.8, 0.4, 0.6]
+    ]
+    vertices["texture_cords"] = [
+        [1.0, 1.0],
+        [1.0, 0.0],
+        [0.0, 0.0],
+        [0.0, 1.0]
     ]
     
     VBO = GL.glGenBuffers(1)
@@ -48,18 +53,30 @@ if __name__ == "__main__":
     GL.glEnableVertexAttribArray(0)
     GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, vertices.strides[0], ctypes.c_void_p(vertices.dtype["vertex_position"].itemsize))
     GL.glEnableVertexAttribArray(1)
+    GL.glVertexAttribPointer(2, 2, GL.GL_FLOAT, GL.GL_FALSE, vertices.strides[0], ctypes.c_void_p(vertices.dtype["vertex_position"].itemsize+vertices.dtype["vertex_color"].itemsize))
+    GL.glEnableVertexAttribArray(2)
 
-    indices = array(
+    indices = numpy.array(
         [
             0, 1, 3,
             1, 2, 3
-        ],
-        dtype=uint32,
+        ], numpy.uint32,
     )
     EBO = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, EBO)
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL.GL_STATIC_DRAW)
 
+    texture = GL.glGenTextures(1)
+    GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
+    
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT)
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT)
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR)
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+
+    img = numpy.array(Image.open(f"{dirPath}/container.jpg"), numpy.int8)
+    GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, numpy.size(img,0), numpy.size(img,1), 0, GL.GL_RGB, GL.GL_UNSIGNED_BYTE, img)
+    GL.glGenerateMipmap(GL.GL_TEXTURE_2D)
 
     theShader = Shader(dirPath+"/shaders/shader.vert", dirPath+"/shaders/shader.frag")
     
@@ -70,6 +87,7 @@ if __name__ == "__main__":
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
         theShader.use()
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
         GL.glBindVertexArray(VAO)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
 
