@@ -66,19 +66,34 @@ if __name__ == "__main__":
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, EBO)
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL.GL_STATIC_DRAW)
 
-    texture = GL.glGenTextures(1)
-    GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
+    texture1 = GL.glGenTextures(1)
+    GL.glBindTexture(GL.GL_TEXTURE_2D, texture1)
     
     GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT)
     GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT)
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR_MIPMAP_LINEAR)
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
     GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
 
-    img = numpy.array(Image.open(f"{dirPath}/container.jpg"), numpy.int8)
-    GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, numpy.size(img,0), numpy.size(img,1), 0, GL.GL_RGB, GL.GL_UNSIGNED_BYTE, img)
+    img1 = numpy.flip(numpy.array(Image.open(f"{dirPath}/container.jpg"), numpy.int8),0)
+    GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, numpy.size(img1,0), numpy.size(img1,1), 0, GL.GL_RGB, GL.GL_UNSIGNED_BYTE, img1)
     GL.glGenerateMipmap(GL.GL_TEXTURE_2D)
 
+    texture2 = GL.glGenTextures(1)
+    GL.glBindTexture(GL.GL_TEXTURE_2D, texture2)
+    
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT)
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT)
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+    img2 = numpy.flip(numpy.array(Image.open(f"{dirPath}/awesomeface.png"), numpy.int8),0)
+    GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, numpy.size(img2,0), numpy.size(img2,1), 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, img2)
+    GL.glGenerateMipmap(GL.GL_TEXTURE_2D)
+
+
     theShader = Shader(dirPath+"/shaders/shader.vert", dirPath+"/shaders/shader.frag")
+    theShader.use()
+    theShader.setInt("texture1", 0)
+    theShader.setInt("texture2", 1)
     
     while run:
         pygame.display.set_caption(f"3D! | dt:{DT}, fps:{1000/DT}")
@@ -86,8 +101,11 @@ if __name__ == "__main__":
         GL.glClearColor(0.2, 0.3, 0.3, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texture1)
+        GL.glActiveTexture(GL.GL_TEXTURE1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texture2)
         theShader.use()
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
         GL.glBindVertexArray(VAO)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
 
