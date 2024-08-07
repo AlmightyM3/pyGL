@@ -111,18 +111,60 @@ if __name__ == "__main__":
     DT = 1.0
     run = True
 
-    vertices = numpy.zeros(4, [("vertex_position", numpy.float32, 3), ("texture_cords", numpy.float32, 2)])
+    vertices = numpy.zeros(24, [("vertex_position", numpy.float32, 3), ("texture_cords", numpy.float32, 2)]) # cube adaped from https://pastebin.com/XiCprv6S
     vertices["vertex_position"] = [
-        [ 0.5,  0.5, 0.0],
-        [ 0.5, -0.5, 0.0],
-        [-0.5, -0.5, 0.0],
-        [-0.5,  0.5, 0.0]
+        [-0.5, -0.5, -0.5], # A0
+        [ 0.5, -0.5, -0.5], # B1
+        [ 0.5,  0.5, -0.5], # C2
+        [-0.5,  0.5, -0.5], # D3
+        [-0.5, -0.5,  0.5], # E4
+        [ 0.5, -0.5,  0.5], # F5
+        [ 0.5,  0.5,  0.5], # G6
+        [-0.5,  0.5,  0.5], # H7
+
+        [-0.5,  0.5, -0.5], # D8
+        [-0.5, -0.5, -0.5], # A9
+        [-0.5, -0.5,  0.5], # E10
+        [-0.5,  0.5,  0.5], # H11
+        [ 0.5, -0.5, -0.5], # B12
+        [ 0.5,  0.5, -0.5], # C13
+        [ 0.5,  0.5,  0.5], # G14
+        [ 0.5, -0.5,  0.5], # F15
+
+        [-0.5, -0.5, -0.5], # A16
+        [ 0.5, -0.5, -0.5], # B17
+        [ 0.5, -0.5,  0.5], # F18
+        [-0.5, -0.5,  0.5], # E19
+        [ 0.5,  0.5, -0.5], # C20
+        [-0.5,  0.5, -0.5], # D21
+        [-0.5,  0.5,  0.5], # H22
+        [ 0.5,  0.5,  0.5], # G23
     ]
     vertices["texture_cords"] = [
-        [1.0, 1.0],
-        [1.0, 0.0],
-        [0.0, 0.0],
-        [0.0, 1.0]
+        [0.0, 0.0], # A0
+        [1.0, 0.0], # B1 
+        [1.0, 1.0], # C2
+        [0.0, 1.0], # D3
+        [0.0, 0.0], # E4
+        [1.0, 0.0], # F5
+        [1.0, 1.0], # G6
+        [0.0, 1.0], # H7
+        [0.0, 0.0], # D8
+        [1.0, 0.0], # A9
+        [1.0, 1.0], # E10
+        [0.0, 1.0], # H11
+        [0.0, 0.0], # B12
+        [1.0, 0.0], # C13
+        [1.0, 1.0], # G14
+        [0.0, 1.0], # F15
+        [0.0, 0.0], # A16
+        [1.0, 0.0], # B17
+        [1.0, 1.0], # F18
+        [0.0, 1.0], # E19
+        [0.0, 0.0], # C20
+        [1.0, 0.0], # D21
+        [1.0, 1.0], # H22
+        [0.0, 1.0], # G23
     ]
     
     VBO = GL.glGenBuffers(1)
@@ -138,12 +180,23 @@ if __name__ == "__main__":
     GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, vertices.strides[0], ctypes.c_void_p(vertices.dtype["vertex_position"].itemsize))
     GL.glEnableVertexAttribArray(1)
 
-    indices = numpy.array(
-        [
-            0, 1, 3,
-            1, 2, 3
-        ], numpy.uint32,
-    )
+    indices = numpy.array([
+        # front and back
+        0, 3, 2,
+        2, 1, 0,
+        4, 5, 6,
+        6, 7 ,4,
+        # left and right
+        11, 8, 9,
+        9, 10, 11,
+        12, 13, 14,
+        14, 15, 12,
+        # bottom and top
+        16, 17, 18,
+        18, 19, 16,
+        20, 21, 22,
+        22, 23, 20
+    ], numpy.uint32)
     EBO = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, EBO)
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL.GL_STATIC_DRAW)
@@ -180,12 +233,22 @@ if __name__ == "__main__":
     trans = numpy.eye(4)
     transformLoc = GL.glGetUniformLocation(theShader.ID, "transform")
     GL.glUniformMatrix4fv(transformLoc, 1, GL.GL_FALSE, trans)
+
+    cam  = translate(numpy.eye(4), 0,0,-3)
+    cameraLoc = GL.glGetUniformLocation(theShader.ID, "camera")
+    GL.glUniformMatrix4fv(cameraLoc, 1, GL.GL_FALSE, cam)
+
+    proj = perspective(45, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
+    projectionLoc = GL.glGetUniformLocation(theShader.ID, "projection")
+    GL.glUniformMatrix4fv(projectionLoc, 1, GL.GL_FALSE, proj)
+
+    GL.glEnable(GL.GL_DEPTH_TEST)
     
     while run:
         pygame.display.set_caption(f"3D! | dt:{DT}, fps:{1000/DT}")
 
         GL.glClearColor(0.2, 0.3, 0.3, 1.0)
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glActiveTexture(GL.GL_TEXTURE0)
         GL.glBindTexture(GL.GL_TEXTURE_2D, texture1)
@@ -194,9 +257,7 @@ if __name__ == "__main__":
 
         theShader.use()
         trans = numpy.eye(4)
-        trans = rotate(trans, (pygame.time.get_ticks()-startTime)*0.05%360,  0.0,0.0,1.0)
-        trans = scale(trans, 0.75,0.75,0.75)
-        trans = translate(trans, 0.5,-0.5,0.0)
+        trans = rotate(trans, (pygame.time.get_ticks()-startTime)*0.05%360,  0.5,1.0,0.0)
         transformLoc = GL.glGetUniformLocation(theShader.ID, "transform")
         GL.glUniformMatrix4fv(transformLoc, 1, GL.GL_FALSE, trans)
 
