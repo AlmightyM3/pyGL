@@ -57,3 +57,5 @@ class Shader:
         GL.glUniform1i(GL.glGetUniformLocation(self.ID, name), value)
     def setFloat(self, name, value):
         GL.glUniform1f(GL.glGetUniformLocation(self.ID, name), value)
+    def setMat4(self, name, value):
+        GL.glUniformMatrix4fv(GL.glGetUniformLocation(self.ID, name), 1, GL.GL_FALSE, value)

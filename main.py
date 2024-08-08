@@ -7,10 +7,14 @@ import OpenGL.GLU as GLU
 import numpy
 
 from PIL import Image
+from pygame import Vector3
 
 from Shader import Shader
+from Texture import Texture
 
 dirPath = os.path.dirname(os.path.abspath(__file__))
+CAMERA_SPEED = 2.5
+MOUSE_SENSITIVITY = 0.1
 
 def translate(matrix, x, y, z):
     translation_matrix = numpy.array([
@@ -20,6 +24,7 @@ def translate(matrix, x, y, z):
             [0.0, 0.0, 0.0, 1.0],
         ], dtype=matrix.dtype).T
     return numpy.dot(matrix, translation_matrix)
+
 def scale(matrix, x, y, z):
     translation_matrix = numpy.array([
             [x  , 0.0, 0.0, 0.0],
@@ -28,6 +33,22 @@ def scale(matrix, x, y, z):
             [0.0, 0.0, 0.0, 1.0],
         ], dtype=matrix.dtype).T
     return numpy.dot(matrix, translation_matrix)
+
+def genCamera(cameraPos, cameraTarget, cameraUp):
+    cameraDirection = (cameraPos - cameraTarget).normalize()
+    cameraRight = Vector3(0.0, 1.0, 0.0).cross(cameraDirection)
+    #cameraUp = cameraDirection.cross(cameraRight)
+    return numpy.array([
+        [cameraRight.x, cameraRight.y, cameraRight.z, 0.0],
+        [cameraUp.x,cameraUp.y,cameraUp.z, 0.0],
+        [cameraDirection.x,cameraDirection.y,cameraDirection.z, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+    ], numpy.float32).dot([
+        [1.0, 0.0, 0.0, -cameraPos.x],
+        [0.0, 1.0, 0.0, -cameraPos.y],
+        [0.0, 0.0, 1.0, -cameraPos.z],
+        [0.0, 0.0, 0.0, 1.0],
+    ]).T
 
 # All further matrix functions are taken from the Pygame-ce glcube example. I hope to rewrite them myself once I actually understand how the math works, but for now this is what I have.
 def rotate(matrix, angle, x, y, z):
@@ -104,7 +125,7 @@ def perspective(fovy, aspect, znear, zfar):
 if __name__ == "__main__":
     # Make a openGL compatable window
     pygame.init()
-    WINDOW_SIZE = (800,600)
+    WINDOW_SIZE = (800*2,600*2)
     window = pygame.display.set_mode(WINDOW_SIZE,  pygame.OPENGL | pygame.DOUBLEBUF)
     clock = pygame.time.Clock()
     startTime = pygame.time.get_ticks()
@@ -168,7 +189,6 @@ if __name__ == "__main__":
     ]
     
     VBO = GL.glGenBuffers(1)
-
     VAO = GL.glGenVertexArrays(1) 
     GL.glBindVertexArray(VAO)
 
@@ -197,69 +217,81 @@ if __name__ == "__main__":
         20, 21, 22,
         22, 23, 20
     ], numpy.uint32)
+    
     EBO = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, EBO)
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL.GL_STATIC_DRAW)
 
-    texture1 = GL.glGenTextures(1)
-    GL.glBindTexture(GL.GL_TEXTURE_2D, texture1)
-    
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT)
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT)
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
-
-    img1 = numpy.flip(numpy.array(Image.open(f"{dirPath}/container.jpg"), numpy.int8),0)
-    GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB, numpy.size(img1,0), numpy.size(img1,1), 0, GL.GL_RGB, GL.GL_UNSIGNED_BYTE, img1)
-    GL.glGenerateMipmap(GL.GL_TEXTURE_2D)
-
-    texture2 = GL.glGenTextures(1)
-    GL.glBindTexture(GL.GL_TEXTURE_2D, texture2)
-    
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT)
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT)
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
-    GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
-    img2 = numpy.flip(numpy.array(Image.open(f"{dirPath}/awesomeface.png"), numpy.int8),0)
-    GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, numpy.size(img2,0), numpy.size(img2,1), 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, img2)
-    GL.glGenerateMipmap(GL.GL_TEXTURE_2D)
-
+    containerTexture = Texture(f"{dirPath}/container.jpg", GL.GL_RGB)
+    smileyTexture = Texture(f"{dirPath}/awesomeface.png", GL.GL_RGBA)
 
     theShader = Shader(dirPath+"/shaders/shader.vert", dirPath+"/shaders/shader.frag")
     theShader.use()
     theShader.setInt("texture1", 0)
     theShader.setInt("texture2", 1)
-
     trans = numpy.eye(4)
-    transformLoc = GL.glGetUniformLocation(theShader.ID, "transform")
-    GL.glUniformMatrix4fv(transformLoc, 1, GL.GL_FALSE, trans)
-
-    cam  = translate(numpy.eye(4), 0,0,-3)
-    cameraLoc = GL.glGetUniformLocation(theShader.ID, "camera")
-    GL.glUniformMatrix4fv(cameraLoc, 1, GL.GL_FALSE, cam)
-
+    theShader.setMat4("transform", trans)
+    cameraPos = Vector3(0.0, 0.0, 3.0)
+    cameraFront = Vector3(0.0, 0.0, -1.0)
+    cameraUp = Vector3(0.0, 1.0,  0.0)
+    view = genCamera(cameraPos, cameraPos+cameraFront, cameraUp)
+    theShader.setMat4("view", view)
     proj = perspective(45, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
-    projectionLoc = GL.glGetUniformLocation(theShader.ID, "projection")
-    GL.glUniformMatrix4fv(projectionLoc, 1, GL.GL_FALSE, proj)
+    theShader.setMat4("projection", proj)
 
     GL.glEnable(GL.GL_DEPTH_TEST)
+
+    pitch = 0.0
+    yaw = -90.0
+    oldMousePos = pygame.mouse.get_pos()
     
     while run:
         pygame.display.set_caption(f"3D! | dt:{DT}, fps:{1000/DT}")
 
+        inputs = pygame.key.get_pressed()
+        if inputs[pygame.K_w] or inputs[pygame.K_UP]:
+            cameraPos += cameraFront * CAMERA_SPEED * (DT/1000)
+        if inputs[pygame.K_s] or inputs[pygame.K_DOWN]:
+            cameraPos -= cameraFront * CAMERA_SPEED * (DT/1000)
+        if inputs[pygame.K_a] or inputs[pygame.K_LEFT]:
+            cameraPos -= cameraFront.cross(cameraUp).normalize() * CAMERA_SPEED * (DT/1000)
+        if inputs[pygame.K_d] or inputs[pygame.K_RIGHT]:
+            cameraPos += cameraFront.cross(cameraUp).normalize() * CAMERA_SPEED * (DT/1000)
+        if inputs[pygame.K_q]:
+            cameraPos += cameraUp * CAMERA_SPEED * (DT/1000)
+        if inputs[pygame.K_e]:
+            cameraPos -= cameraUp * CAMERA_SPEED * (DT/1000)
+        
+        mousePos = pygame.mouse.get_pos()
+        offsetX = mousePos[0]-oldMousePos[0]
+        offsetY = oldMousePos[1]-mousePos[1]
+        oldMousePos = mousePos
+        yaw += offsetX * MOUSE_SENSITIVITY
+        pitch += offsetY * MOUSE_SENSITIVITY
+        yaw %= 360
+        if pitch > 89.0:
+            pitch =  89.0
+        if pitch < -89.0:
+            pitch = -89.0
+        direction = Vector3()
+        direction.x = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
+        direction.y = math.sin(math.radians(pitch))
+        direction.z = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
+        cameraFront = direction.normalize()
+        
         GL.glClearColor(0.2, 0.3, 0.3, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-        GL.glActiveTexture(GL.GL_TEXTURE0)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texture1)
-        GL.glActiveTexture(GL.GL_TEXTURE1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, texture2)
+        containerTexture.use(0)
+        smileyTexture.use(1)
 
         theShader.use()
-        trans = numpy.eye(4)
-        trans = rotate(trans, (pygame.time.get_ticks()-startTime)*0.05%360,  0.5,1.0,0.0)
-        transformLoc = GL.glGetUniformLocation(theShader.ID, "transform")
-        GL.glUniformMatrix4fv(transformLoc, 1, GL.GL_FALSE, trans)
+        # trans = numpy.eye(4)
+        # trans = rotate(trans, (pygame.time.get_ticks()-startTime)*0.05%360,  0.5,1.0,0.0)
+        # theShader.setMat4("transform", trans)
+
+        view = genCamera(cameraPos, cameraPos+cameraFront, cameraUp)
+        theShader.setMat4("view", view)
 
         GL.glBindVertexArray(VAO)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
