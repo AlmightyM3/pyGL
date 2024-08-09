@@ -34,21 +34,21 @@ def scale(matrix, x, y, z):
         ], dtype=matrix.dtype).T
     return numpy.dot(matrix, translation_matrix)
 
-def genCamera(cameraPos, cameraTarget, cameraUp):
+def genCamera(cameraPos, cameraTarget):
     cameraDirection = (cameraPos - cameraTarget).normalize()
-    cameraRight = Vector3(0.0, 1.0, 0.0).cross(cameraDirection)
-    #cameraUp = cameraDirection.cross(cameraRight)
+    cameraRight = Vector3(0,1,0).cross(cameraDirection)
+    cameraUp = cameraDirection.cross(cameraRight)
     return numpy.array([
         [cameraRight.x, cameraRight.y, cameraRight.z, 0.0],
         [cameraUp.x,cameraUp.y,cameraUp.z, 0.0],
         [cameraDirection.x,cameraDirection.y,cameraDirection.z, 0.0],
         [0.0, 0.0, 0.0, 1.0]
-    ], numpy.float32).dot([
+    ], numpy.float32).dot(numpy.array([
         [1.0, 0.0, 0.0, -cameraPos.x],
         [0.0, 1.0, 0.0, -cameraPos.y],
         [0.0, 0.0, 1.0, -cameraPos.z],
-        [0.0, 0.0, 0.0, 1.0],
-    ]).T
+        [0.0, 0.0, 0.0, 1.0]
+    ], numpy.float32)).T
 
 # All further matrix functions are taken from the Pygame-ce glcube example. I hope to rewrite them myself once I actually understand how the math works, but for now this is what I have.
 def rotate(matrix, angle, x, y, z):
@@ -125,7 +125,7 @@ def perspective(fovy, aspect, znear, zfar):
 if __name__ == "__main__":
     # Make a openGL compatable window
     pygame.init()
-    WINDOW_SIZE = (800*2,600*2)
+    WINDOW_SIZE = (800,600)
     window = pygame.display.set_mode(WINDOW_SIZE,  pygame.OPENGL | pygame.DOUBLEBUF)
     clock = pygame.time.Clock()
     startTime = pygame.time.get_ticks()
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     cameraPos = Vector3(0.0, 0.0, 3.0)
     cameraFront = Vector3(0.0, 0.0, -1.0)
     cameraUp = Vector3(0.0, 1.0,  0.0)
-    view = genCamera(cameraPos, cameraPos+cameraFront, cameraUp)
+    view = genCamera(cameraPos, cameraPos+cameraFront)
     theShader.setMat4("view", view)
     proj = perspective(45, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
     theShader.setMat4("projection", proj)
@@ -266,18 +266,19 @@ if __name__ == "__main__":
         offsetX = mousePos[0]-oldMousePos[0]
         offsetY = oldMousePos[1]-mousePos[1]
         oldMousePos = mousePos
-        yaw += offsetX * MOUSE_SENSITIVITY
-        pitch += offsetY * MOUSE_SENSITIVITY
-        yaw %= 360
-        if pitch > 89.0:
-            pitch =  89.0
-        if pitch < -89.0:
-            pitch = -89.0
-        direction = Vector3()
-        direction.x = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
-        direction.y = math.sin(math.radians(pitch))
-        direction.z = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
-        cameraFront = direction.normalize()
+        if pygame.mouse.get_pressed()[0]:
+            yaw += offsetX * MOUSE_SENSITIVITY
+            pitch += offsetY * MOUSE_SENSITIVITY
+            yaw %= 360
+            if pitch > 89.0:
+                pitch =  89.0
+            if pitch < -89.0:
+                pitch = -89.0
+            direction = Vector3()
+            direction.x = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
+            direction.y = math.sin(math.radians(pitch))
+            direction.z = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
+            cameraFront = direction.normalize()
         
         GL.glClearColor(0.2, 0.3, 0.3, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
@@ -290,7 +291,7 @@ if __name__ == "__main__":
         # trans = rotate(trans, (pygame.time.get_ticks()-startTime)*0.05%360,  0.5,1.0,0.0)
         # theShader.setMat4("transform", trans)
 
-        view = genCamera(cameraPos, cameraPos+cameraFront, cameraUp)
+        view = genCamera(cameraPos, cameraPos+cameraFront)
         theShader.setMat4("view", view)
 
         GL.glBindVertexArray(VAO)
