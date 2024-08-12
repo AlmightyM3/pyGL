@@ -132,61 +132,50 @@ if __name__ == "__main__":
     DT = 1.0
     run = True
 
-    vertices = numpy.zeros(24, [("vertex_position", numpy.float32, 3), ("texture_cords", numpy.float32, 2)]) # cube adaped from https://pastebin.com/XiCprv6S
-    vertices["vertex_position"] = [
-        [-0.5, -0.5, -0.5], # A0
-        [ 0.5, -0.5, -0.5], # B1
-        [ 0.5,  0.5, -0.5], # C2
-        [-0.5,  0.5, -0.5], # D3
-        [-0.5, -0.5,  0.5], # E4
-        [ 0.5, -0.5,  0.5], # F5
-        [ 0.5,  0.5,  0.5], # G6
-        [-0.5,  0.5,  0.5], # H7
-
-        [-0.5,  0.5, -0.5], # D8
-        [-0.5, -0.5, -0.5], # A9
-        [-0.5, -0.5,  0.5], # E10
-        [-0.5,  0.5,  0.5], # H11
-        [ 0.5, -0.5, -0.5], # B12
-        [ 0.5,  0.5, -0.5], # C13
-        [ 0.5,  0.5,  0.5], # G14
-        [ 0.5, -0.5,  0.5], # F15
-
-        [-0.5, -0.5, -0.5], # A16
-        [ 0.5, -0.5, -0.5], # B17
-        [ 0.5, -0.5,  0.5], # F18
-        [-0.5, -0.5,  0.5], # E19
-        [ 0.5,  0.5, -0.5], # C20
-        [-0.5,  0.5, -0.5], # D21
-        [-0.5,  0.5,  0.5], # H22
-        [ 0.5,  0.5,  0.5], # G23
-    ]
-    vertices["texture_cords"] = [
-        [0.0, 0.0], # A0
-        [1.0, 0.0], # B1 
-        [1.0, 1.0], # C2
-        [0.0, 1.0], # D3
-        [0.0, 0.0], # E4
-        [1.0, 0.0], # F5
-        [1.0, 1.0], # G6
-        [0.0, 1.0], # H7
-        [0.0, 0.0], # D8
-        [1.0, 0.0], # A9
-        [1.0, 1.0], # E10
-        [0.0, 1.0], # H11
-        [0.0, 0.0], # B12
-        [1.0, 0.0], # C13
-        [1.0, 1.0], # G14
-        [0.0, 1.0], # F15
-        [0.0, 0.0], # A16
-        [1.0, 0.0], # B17
-        [1.0, 1.0], # F18
-        [0.0, 1.0], # E19
-        [0.0, 0.0], # C20
-        [1.0, 0.0], # D21
-        [1.0, 1.0], # H22
-        [0.0, 1.0], # G23
-    ]
+    vertices = numpy.array([
+        #positions          normals           texture coords
+         0.5, -0.5, -0.5,   0.0,  0.0, -1.0,  1.0, 0.0,
+        -0.5, -0.5, -0.5,   0.0,  0.0, -1.0,  0.0, 0.0,
+         0.5,  0.5, -0.5,   0.0,  0.0, -1.0,  1.0, 1.0,
+         0.5,  0.5, -0.5,   0.0,  0.0, -1.0,  1.0, 1.0,
+        -0.5,  0.5, -0.5,   0.0,  0.0, -1.0,  0.0, 1.0,
+        -0.5, -0.5, -0.5,   0.0,  0.0, -1.0,  0.0, 0.0,
+ 
+        -0.5, -0.5,  0.5,   0.0,  0.0, 1.0,   0.0, 0.0,
+         0.5, -0.5,  0.5,   0.0,  0.0, 1.0,   1.0, 0.0,
+         0.5,  0.5,  0.5,   0.0,  0.0, 1.0,   1.0, 1.0,
+         0.5,  0.5,  0.5,   0.0,  0.0, 1.0,   1.0, 1.0,
+        -0.5,  0.5,  0.5,   0.0,  0.0, 1.0,   0.0, 1.0,
+        -0.5, -0.5,  0.5,   0.0,  0.0, 1.0,   0.0, 0.0,
+ 
+        -0.5,  0.5,  0.5,  -1.0,  0.0,  0.0,  1.0, 0.0,
+        -0.5,  0.5, -0.5,  -1.0,  0.0,  0.0,  1.0, 1.0,
+        -0.5, -0.5, -0.5,  -1.0,  0.0,  0.0,  0.0, 1.0,
+        -0.5, -0.5, -0.5,  -1.0,  0.0,  0.0,  0.0, 1.0,
+        -0.5, -0.5,  0.5,  -1.0,  0.0,  0.0,  0.0, 0.0,
+        -0.5,  0.5,  0.5,  -1.0,  0.0,  0.0,  1.0, 0.0,
+ 
+         0.5,  0.5,  0.5,   1.0,  0.0,  0.0,  1.0, 0.0,
+         0.5,  0.5, -0.5,   1.0,  0.0,  0.0,  1.0, 1.0,
+         0.5, -0.5, -0.5,   1.0,  0.0,  0.0,  0.0, 1.0,
+         0.5, -0.5, -0.5,   1.0,  0.0,  0.0,  0.0, 1.0,
+         0.5, -0.5,  0.5,   1.0,  0.0,  0.0,  0.0, 0.0,
+         0.5,  0.5,  0.5,   1.0,  0.0,  0.0,  1.0, 0.0,
+ 
+        -0.5, -0.5, -0.5,   0.0, -1.0,  0.0,  0.0, 1.0,
+         0.5, -0.5, -0.5,   0.0, -1.0,  0.0,  1.0, 1.0,
+         0.5, -0.5,  0.5,   0.0, -1.0,  0.0,  1.0, 0.0,
+         0.5, -0.5,  0.5,   0.0, -1.0,  0.0,  1.0, 0.0,
+        -0.5, -0.5,  0.5,   0.0, -1.0,  0.0,  0.0, 0.0,
+        -0.5, -0.5, -0.5,   0.0, -1.0,  0.0,  0.0, 1.0,
+ 
+        -0.5,  0.5, -0.5,   0.0,  1.0,  0.0,  0.0, 1.0,
+         0.5,  0.5, -0.5,   0.0,  1.0,  0.0,  1.0, 1.0,
+         0.5,  0.5,  0.5,   0.0,  1.0,  0.0,  1.0, 0.0,
+         0.5,  0.5,  0.5,   0.0,  1.0,  0.0,  1.0, 0.0,
+        -0.5,  0.5,  0.5,   0.0,  1.0,  0.0,  0.0, 0.0,
+        -0.5,  0.5, -0.5,   0.0,  1.0,  0.0,  0.0, 1.0
+    ], numpy.float32)
     
     VBO = GL.glGenBuffers(1)
     VAO = GL.glGenVertexArrays(1) 
@@ -195,27 +184,20 @@ if __name__ == "__main__":
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, VBO)
     GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL.GL_STATIC_DRAW)
 
-    GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, vertices.strides[0], ctypes.c_void_p(0))
+    GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 32, ctypes.c_void_p(0)) # 32 = 8*(32/8) 
     GL.glEnableVertexAttribArray(0)
-    GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, vertices.strides[0], ctypes.c_void_p(vertices.dtype["vertex_position"].itemsize))
+    GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 32, ctypes.c_void_p(3*vertices.itemsize))#vertices.dtype["vertex_position"].itemsize
     GL.glEnableVertexAttribArray(1)
+    GL.glVertexAttribPointer(2, 2, GL.GL_FLOAT, GL.GL_FALSE, 32, ctypes.c_void_p(6*vertices.itemsize))#vertices.dtype["vertex_position"].itemsize+vertices.dtype["vertex_normal"].itemsize
+    GL.glEnableVertexAttribArray(2)
 
     indices = numpy.array([
-        # front and back
-        0, 3, 2,
-        2, 1, 0,
-        4, 5, 6,
-        6, 7 ,4,
-        # left and right
-        11, 8, 9,
-        9, 10, 11,
-        12, 13, 14,
-        14, 15, 12,
-        # bottom and top
-        16, 17, 18,
-        18, 19, 16,
-        20, 21, 22,
-        22, 23, 20
+        0, 1, 2,  3, 4, 5, 
+        6, 7, 8,  9, 10,11,
+        12,13,14, 15,16,17,
+        18,19,20, 21,22,23,
+        24,25,26, 27,28,29,
+        30,31,32, 33,34,35
     ], numpy.uint32)
     
     EBO = GL.glGenBuffers(1)
@@ -223,21 +205,33 @@ if __name__ == "__main__":
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL.GL_STATIC_DRAW)
 
     containerTexture = Texture(f"{dirPath}/container.jpg", GL.GL_RGB)
-    smileyTexture = Texture(f"{dirPath}/awesomeface.png", GL.GL_RGBA)
 
-    theShader = Shader(dirPath+"/shaders/shader.vert", dirPath+"/shaders/shader.frag")
-    theShader.use()
-    theShader.setInt("texture1", 0)
-    theShader.setInt("texture2", 1)
+    mainShader = Shader(dirPath+"/shaders/shader.vert", dirPath+"/shaders/shader.frag")
+    mainShader.use()
+    mainShader.setInt("diffuseTexture", 0)
     trans = numpy.eye(4)
-    theShader.setMat4("transform", trans)
+    mainShader.setMat4("transform", trans)
     cameraPos = Vector3(0.0, 0.0, 3.0)
     cameraFront = Vector3(0.0, 0.0, -1.0)
     cameraUp = Vector3(0.0, 1.0,  0.0)
     view = genCamera(cameraPos, cameraPos+cameraFront)
-    theShader.setMat4("view", view)
+    mainShader.setMat4("view", view)
     proj = perspective(45, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
-    theShader.setMat4("projection", proj)
+    mainShader.setMat4("projection", proj)
+    objectColor = Vector3(1,0.5,0.31)
+    lightColor = Vector3(1,1,1)
+    lightPos = Vector3(1.2,1.0,2.0)
+    mainShader.setVec3("objectColor", objectColor)
+    mainShader.setVec3("lightColor", lightColor)
+    mainShader.setVec3("lightPos", lightPos)
+    mainShader.setVec3("viewPos", cameraPos)
+
+    lightShader = Shader(dirPath+"/shaders/light.vert", dirPath+"/shaders/light.frag")
+    lightShader.use()
+    lightShader.setMat4("transform", translate(scale(numpy.eye(4), 0.2,0.2,0.2), lightPos.x,lightPos.y,lightPos.z))
+    lightShader.setMat4("view", view)
+    lightShader.setMat4("projection", proj)
+    lightShader.setVec3("lightColor", lightColor)
 
     GL.glEnable(GL.GL_DEPTH_TEST)
 
@@ -280,21 +274,22 @@ if __name__ == "__main__":
             direction.z = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
             cameraFront = direction.normalize()
         
-        GL.glClearColor(0.2, 0.3, 0.3, 1.0)
+        GL.glClearColor(0.1, 0.1, 0.1, 1.0)#0.2, 0.3, 0.3, 1.0
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         containerTexture.use(0)
-        smileyTexture.use(1)
-
-        theShader.use()
-        # trans = numpy.eye(4)
-        # trans = rotate(trans, (pygame.time.get_ticks()-startTime)*0.05%360,  0.5,1.0,0.0)
-        # theShader.setMat4("transform", trans)
 
         view = genCamera(cameraPos, cameraPos+cameraFront)
-        theShader.setMat4("view", view)
-
+        
+        lightShader.use()
+        lightShader.setMat4("view", view)
         GL.glBindVertexArray(VAO)
+        GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
+        
+        mainShader.use()
+        mainShader.setMat4("view", view)
+        GL.glBindVertexArray(VAO)
+        #GL.glDrawArrays(GL.GL_TRIANGLES, 0, len(vertices)//8)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
 
         pygame.display.flip()

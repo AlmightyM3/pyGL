@@ -1,4 +1,5 @@
 import OpenGL.GL as GL
+import numpy
 
 class Shader:  
     def __init__(self, vertexPath, fragmentPath):
@@ -57,5 +58,7 @@ class Shader:
         GL.glUniform1i(GL.glGetUniformLocation(self.ID, name), value)
     def setFloat(self, name, value):
         GL.glUniform1f(GL.glGetUniformLocation(self.ID, name), value)
+    def setVec3(self, name, value):
+        GL.glUniform3fv(GL.glGetUniformLocation(self.ID, name), 1, numpy.array(value,numpy.float32))
     def setMat4(self, name, value):
         GL.glUniformMatrix4fv(GL.glGetUniformLocation(self.ID, name), 1, GL.GL_FALSE, value)
