@@ -288,6 +288,7 @@ if __name__ == "__main__":
         
         mainShader.use()
         mainShader.setMat4("view", view)
+        mainShader.setVec3("viewPos", cameraPos)
         GL.glBindVertexArray(VAO)
         #GL.glDrawArrays(GL.GL_TRIANGLES, 0, len(vertices)//8)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
