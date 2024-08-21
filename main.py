@@ -192,11 +192,11 @@ if __name__ == "__main__":
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, EBO)
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL.GL_STATIC_DRAW)
 
-    containerTexture = Texture(f"{dirPath}/container.jpg", GL.GL_RGB)
+    diffuseTexture = Texture(f"{dirPath}/container2.PNG", GL.GL_RGBA)
+    specularTexture = Texture(f"{dirPath}/container2_specular.PNG", GL.GL_RGBA)
 
     mainShader = Shader(dirPath+"/shaders/shader.vert", dirPath+"/shaders/shader.frag")
     mainShader.use()
-    mainShader.setInt("diffuseTexture", 0)
     trans = numpy.eye(4)
     mainShader.setMat4("transform", trans)
     cameraPos = Vector3(0.0, 0.0, 3.0)
@@ -206,12 +206,17 @@ if __name__ == "__main__":
     mainShader.setMat4("view", view)
     proj = perspective(45, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
     mainShader.setMat4("projection", proj)
-    objectColor = Vector3(1,0.5,0.31)
-    lightColor = Vector3(1,1,1)
+    mainShader.setInt("material.diffuse", 0)
+    mainShader.setInt("material.specular", 1)
+    mainShader.setFloat("material.shininess", 32.0)
     lightPos = Vector3(1.2,1.0,2.0)
-    mainShader.setVec3("objectColor", objectColor)
-    mainShader.setVec3("lightColor", lightColor)
-    mainShader.setVec3("lightPos", lightPos)
+    lightColor = Vector3(1.0,1.0,1.0)
+    diffuseColor = lightColor * 0.5; 
+    ambientColor = lightColor * 0.2; # Recommended is diffuseColor * 0.2 but I think this looks better
+    mainShader.setVec3("light.ambient", ambientColor)
+    mainShader.setVec3("light.diffuse", diffuseColor)
+    mainShader.setVec3("light.specular", Vector3(1.0))
+    mainShader.setVec3("light.position", lightPos)
     mainShader.setVec3("viewPos", cameraPos)
 
     lightShader = Shader(dirPath+"/shaders/light.vert", dirPath+"/shaders/light.frag")
@@ -265,7 +270,8 @@ if __name__ == "__main__":
         GL.glClearColor(0.1, 0.1, 0.1, 1.0)#0.2, 0.3, 0.3, 1.0
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-        containerTexture.use(0)
+        diffuseTexture.use(0)
+        specularTexture.use(1)
 
         view = genCamera(cameraPos, cameraPos+cameraFront)
         
@@ -278,7 +284,6 @@ if __name__ == "__main__":
         mainShader.setMat4("view", view)
         mainShader.setVec3("viewPos", cameraPos)
         GL.glBindVertexArray(VAO)
-        #GL.glDrawArrays(GL.GL_TRIANGLES, 0, len(vertices)//8)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
 
         pygame.display.flip()
