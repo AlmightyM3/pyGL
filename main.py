@@ -15,6 +15,7 @@ from Texture import Texture
 dirPath = os.path.dirname(os.path.abspath(__file__))
 CAMERA_SPEED = 2.5
 MOUSE_SENSITIVITY = 0.1
+NUM_POINT_LIGHTS = 2
 
 def translate(matrix, x, y, z):
     translation_matrix = numpy.array([
@@ -209,22 +210,19 @@ if __name__ == "__main__":
     mainShader.setInt("material.diffuse", 0)
     mainShader.setInt("material.specular", 1)
     mainShader.setFloat("material.shininess", 32.0)
-    lightPos = Vector3(1.2,1.0,2.0)
-    lightColor = Vector3(1.0,1.0,1.0)
-    diffuseColor = lightColor * 0.5; 
-    ambientColor = lightColor * 0.2; # Recommended is diffuseColor * 0.2 but I think this looks better
-    mainShader.setVec3("light.ambient", ambientColor)
-    mainShader.setVec3("light.diffuse", diffuseColor)
-    mainShader.setVec3("light.specular", Vector3(1.0))
-    mainShader.setVec3("light.position", lightPos)
+    lightPositions = [Vector3(1.2,1.0,2.0), Vector3(-3,5,-8)]
+    lightColors = [Vector3(1.0,1.0,1.0), Vector3(1.0,1.0,1.0)]
+    for i in range(NUM_POINT_LIGHTS):
+        mainShader.setVec3(f"lights[{i}].ambient", lightColors[i]*0.2)
+        mainShader.setVec3(f"lights[{i}].diffuse", lightColors[i]*0.5)
+        mainShader.setVec3(f"lights[{i}].specular", Vector3(1.0))
+        mainShader.setVec3(f"lights[{i}].position", lightPositions[i])
     mainShader.setVec3("viewPos", cameraPos)
 
     lightShader = Shader(dirPath+"/shaders/light.vert", dirPath+"/shaders/light.frag")
     lightShader.use()
-    lightShader.setMat4("transform", translate(scale(numpy.eye(4), 0.2,0.2,0.2), lightPos.x,lightPos.y,lightPos.z))
     lightShader.setMat4("view", view)
     lightShader.setMat4("projection", proj)
-    lightShader.setVec3("lightColor", lightColor)
 
     GL.glEnable(GL.GL_DEPTH_TEST)
 
@@ -277,8 +275,11 @@ if __name__ == "__main__":
         
         lightShader.use()
         lightShader.setMat4("view", view)
-        GL.glBindVertexArray(VAO)
-        GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
+        for i in range(NUM_POINT_LIGHTS):
+            lightShader.setMat4("transform", translate(scale(numpy.eye(4), 0.2,0.2,0.2), lightPositions[i].x,lightPositions[i].y,lightPositions[i].z))
+            lightShader.setVec3("lightColor", lightColors[i])
+            GL.glBindVertexArray(VAO)
+            GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
         
         mainShader.use()
         mainShader.setMat4("view", view)
