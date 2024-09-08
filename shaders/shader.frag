@@ -15,6 +15,8 @@ struct Light {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+
+    float falloff;
 };
 #define NUM_POINT_LIGHTS 2
 uniform Light[NUM_POINT_LIGHTS] lights; 
@@ -36,7 +38,10 @@ vec3 pointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir){
     float specularValue = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = light.specular * specularValue * vec3(texture(material.specular, TexCoord));  
 
-    return ambient + diffuse + specular;
+    float distance    = length(light.position - FragPos);
+    float attenuation = 1.0 / (1 + light.falloff*(distance * distance)); 
+
+    return (ambient + diffuse + specular) * attenuation;
 }
 
 void main()

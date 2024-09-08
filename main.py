@@ -212,11 +212,13 @@ if __name__ == "__main__":
     mainShader.setFloat("material.shininess", 32.0)
     lightPositions = [Vector3(1.2,1.0,2.0), Vector3(-3,5,-8)]
     lightColors = [Vector3(1.0,1.0,1.0), Vector3(1.0,1.0,1.0)]
+    lightFalloffs = [0.06, 0.06]
     for i in range(NUM_POINT_LIGHTS):
         mainShader.setVec3(f"lights[{i}].ambient", lightColors[i]*0.2)
         mainShader.setVec3(f"lights[{i}].diffuse", lightColors[i]*0.5)
         mainShader.setVec3(f"lights[{i}].specular", Vector3(1.0))
         mainShader.setVec3(f"lights[{i}].position", lightPositions[i])
+        mainShader.setFloat(f"lights[{i}].falloff", lightFalloffs[i])
     mainShader.setVec3("viewPos", cameraPos)
 
     lightShader = Shader(dirPath+"/shaders/light.vert", dirPath+"/shaders/light.frag")
