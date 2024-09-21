@@ -11,6 +11,7 @@ from pygame import Vector3
 
 from Shader import Shader
 from Texture import Texture
+from ModelLoader import OBJ
 
 dirPath = os.path.dirname(os.path.abspath(__file__))
 CAMERA_SPEED = 2.5
@@ -132,6 +133,7 @@ if __name__ == "__main__":
     startTime = pygame.time.get_ticks()
     DT = 1.0
     run = True
+    test = OBJ("Suzanne.obj")
 
     vertices = numpy.array([
         #positions          normals           texture coords
@@ -165,6 +167,7 @@ if __name__ == "__main__":
          0.5,  0.5,  0.5,   0.0,  1.0,  0.0,  1.0, 0.0,
         -0.5,  0.5,  0.5,   0.0,  1.0,  0.0,  0.0, 0.0,
     ], numpy.float32)
+    vertices = test.vertices
     
     VBO = GL.glGenBuffers(1)
     VAO = GL.glGenVertexArrays(1) 
@@ -188,10 +191,13 @@ if __name__ == "__main__":
         16,17,18, 18,19,16,
         20,21,22, 22,23,20
     ], numpy.uint32)
+    #indices = test.indices
     
     EBO = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, EBO)
     GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL.GL_STATIC_DRAW)
+
+    #GL.glEnable(GL.GL_CULL_FACE)
 
     diffuseTexture = Texture(f"{dirPath}/container2.PNG", GL.GL_RGBA)
     specularTexture = Texture(f"{dirPath}/container2_specular.PNG", GL.GL_RGBA)
