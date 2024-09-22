@@ -20,22 +20,6 @@ def scale(matrix, x, y, z):
         ], dtype=matrix.dtype).T
     return numpy.dot(matrix, translation_matrix)
 
-def genCamera(cameraPos, cameraTarget):
-    cameraDirection = (cameraPos - cameraTarget).normalize()
-    cameraRight = Vector3(0,1,0).cross(cameraDirection)
-    cameraUp = cameraDirection.cross(cameraRight)
-    return numpy.array([
-        [cameraRight.x, cameraRight.y, cameraRight.z, 0.0],
-        [cameraUp.x,cameraUp.y,cameraUp.z, 0.0],
-        [cameraDirection.x,cameraDirection.y,cameraDirection.z, 0.0],
-        [0.0, 0.0, 0.0, 1.0]
-    ], numpy.float32).dot(numpy.array([
-        [1.0, 0.0, 0.0, -cameraPos.x],
-        [0.0, 1.0, 0.0, -cameraPos.y],
-        [0.0, 0.0, 1.0, -cameraPos.z],
-        [0.0, 0.0, 0.0, 1.0]
-    ], numpy.float32)).T
-
 # All further matrix functions are taken from the Pygame-ce glcube example. I hope to rewrite them myself once I actually understand how the math works, but for now this is what I have.
 def rotate(matrix, angle, x, y, z):
     """

@@ -13,6 +13,7 @@ from Shader import Shader
 from Texture import Texture
 from ModelLoader import OBJ
 from MatrixTools import *
+from Camera import *
 
 CAMERA_SPEED = 2.5
 MOUSE_SENSITIVITY = 0.1
@@ -96,15 +97,13 @@ if __name__ == "__main__":
     diffuseTexture = Texture("container2.PNG", GL.GL_RGBA)
     specularTexture = Texture("container2_specular.PNG", GL.GL_RGBA)
 
+    camera = FreeCamera(startPos=Vector3(0.0, 0.0, 3.0))
+
     mainShader = Shader("shaders/shader.vert", "shaders/shader.frag")
     mainShader.use()
     trans = numpy.eye(4)
     mainShader.setMat4("transform", trans)
-    cameraPos = Vector3(0.0, 0.0, 3.0)
-    cameraFront = Vector3(0.0, 0.0, -1.0)
-    cameraUp = Vector3(0.0, 1.0,  0.0)
-    view = genCamera(cameraPos, cameraPos+cameraFront)
-    mainShader.setMat4("view", view)
+    mainShader.setMat4("view", camera.matrix)
     proj = perspective(45, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
     mainShader.setMat4("projection", proj)
     mainShader.setInt("material.diffuse", 0)
@@ -119,11 +118,11 @@ if __name__ == "__main__":
         mainShader.setVec3(f"lights[{i}].specular", Vector3(1.0))
         mainShader.setVec3(f"lights[{i}].position", lightPositions[i])
         mainShader.setFloat(f"lights[{i}].falloff", lightFalloffs[i])
-    mainShader.setVec3("viewPos", cameraPos)
+    mainShader.setVec3("viewPos", camera.position)
 
     lightShader = Shader("shaders/light.vert", "shaders/light.frag")
     lightShader.use()
-    lightShader.setMat4("view", view)
+    lightShader.setMat4("view", camera.matrix)
     lightShader.setMat4("projection", proj)
 
     GL.glEnable(GL.GL_DEPTH_TEST)
@@ -135,48 +134,16 @@ if __name__ == "__main__":
     while run:
         pygame.display.set_caption(f"3D! | dt:{DT}, fps:{1000/DT}")
 
-        inputs = pygame.key.get_pressed()
-        if inputs[pygame.K_w] or inputs[pygame.K_UP]:
-            cameraPos += cameraFront * CAMERA_SPEED * (DT/1000)
-        if inputs[pygame.K_s] or inputs[pygame.K_DOWN]:
-            cameraPos -= cameraFront * CAMERA_SPEED * (DT/1000)
-        if inputs[pygame.K_a] or inputs[pygame.K_LEFT]:
-            cameraPos -= cameraFront.cross(cameraUp).normalize() * CAMERA_SPEED * (DT/1000)
-        if inputs[pygame.K_d] or inputs[pygame.K_RIGHT]:
-            cameraPos += cameraFront.cross(cameraUp).normalize() * CAMERA_SPEED * (DT/1000)
-        if inputs[pygame.K_q]:
-            cameraPos += cameraUp * CAMERA_SPEED * (DT/1000)
-        if inputs[pygame.K_e]:
-            cameraPos -= cameraUp * CAMERA_SPEED * (DT/1000)
-        
-        mousePos = pygame.mouse.get_pos()
-        offsetX = mousePos[0]-oldMousePos[0]
-        offsetY = oldMousePos[1]-mousePos[1]
-        oldMousePos = mousePos
-        if pygame.mouse.get_pressed()[0]:
-            yaw += offsetX * MOUSE_SENSITIVITY
-            pitch += offsetY * MOUSE_SENSITIVITY
-            yaw %= 360
-            if pitch > 89.0:
-                pitch =  89.0
-            if pitch < -89.0:
-                pitch = -89.0
-            direction = Vector3()
-            direction.x = math.cos(math.radians(yaw)) * math.cos(math.radians(pitch))
-            direction.y = math.sin(math.radians(pitch))
-            direction.z = math.sin(math.radians(yaw)) * math.cos(math.radians(pitch))
-            cameraFront = direction.normalize()
+        camera.Update(DT)
         
         GL.glClearColor(0.1, 0.1, 0.1, 1.0)#0.2, 0.3, 0.3, 1.0
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         diffuseTexture.use(0)
         specularTexture.use(1)
-
-        view = genCamera(cameraPos, cameraPos+cameraFront)
         
         lightShader.use()
-        lightShader.setMat4("view", view)
+        lightShader.setMat4("view", camera.matrix)
         for i in range(NUM_POINT_LIGHTS):
             lightShader.setMat4("transform", translate(scale(numpy.eye(4), 0.2,0.2,0.2), lightPositions[i].x,lightPositions[i].y,lightPositions[i].z))
             lightShader.setVec3("lightColor", lightColors[i])
@@ -184,8 +151,8 @@ if __name__ == "__main__":
             GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
         
         mainShader.use()
-        mainShader.setMat4("view", view)
-        mainShader.setVec3("viewPos", cameraPos)
+        mainShader.setMat4("view", camera.matrix)
+        mainShader.setVec3("viewPos", camera.position)
         GL.glBindVertexArray(VAO)
         GL.glDrawElements(GL.GL_TRIANGLES, len(indices), GL.GL_UNSIGNED_INT, None)
 
