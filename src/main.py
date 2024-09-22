@@ -15,6 +15,9 @@ from ModelLoader import OBJ
 from MatrixTools import *
 from Camera import *
 
+dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if "\\" in dirPath:
+    dirPath = dirPath.replace("\\", "/")
 CAMERA_SPEED = 2.5
 MOUSE_SENSITIVITY = 0.1
 NUM_POINT_LIGHTS = 2
@@ -28,7 +31,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     DT = 1.0
     run = True
-    #test = OBJ("Suzanne.obj")
+    #test = OBJ(f"{dirPath}/assets/Suzanne.obj")
 
     vertices = numpy.array([
         #positions          normals           texture coords
@@ -94,12 +97,12 @@ if __name__ == "__main__":
 
     GL.glEnable(GL.GL_CULL_FACE)
 
-    diffuseTexture = Texture("container2.PNG", GL.GL_RGBA)
-    specularTexture = Texture("container2_specular.PNG", GL.GL_RGBA)
+    diffuseTexture = Texture(f"{dirPath}/assets/container.PNG", GL.GL_RGBA)
+    specularTexture = Texture(f"{dirPath}/assets/container_specular.PNG", GL.GL_RGBA)
 
     camera = FreeCamera(startPos=Vector3(0.0, 0.0, 3.0))
 
-    mainShader = Shader("shaders/shader.vert", "shaders/shader.frag")
+    mainShader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
     mainShader.use()
     trans = numpy.eye(4)
     mainShader.setMat4("transform", trans)
@@ -120,7 +123,7 @@ if __name__ == "__main__":
         mainShader.setFloat(f"lights[{i}].falloff", lightFalloffs[i])
     mainShader.setVec3("viewPos", camera.position)
 
-    lightShader = Shader("shaders/light.vert", "shaders/light.frag")
+    lightShader = Shader(f"{dirPath}/src/shaders/light.vert", f"{dirPath}/src/shaders/light.frag")
     lightShader.use()
     lightShader.setMat4("view", camera.matrix)
     lightShader.setMat4("projection", proj)
