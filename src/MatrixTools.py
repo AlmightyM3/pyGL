@@ -1,5 +1,4 @@
 import numpy
-from pygame import Vector3
 import math
 
 def translate(matrix, x, y, z):
@@ -20,7 +19,7 @@ def scale(matrix, x, y, z):
         ], dtype=matrix.dtype).T
     return numpy.dot(matrix, translation_matrix)
 
-# All further matrix functions are taken from the Pygame-ce glcube example. I hope to rewrite them myself once I actually understand how the math works, but for now this is what I have.
+# All further functions are taken from the Pygame-ce glcube example. I hope to rewrite them myself once I actually understand how the math works, but for now this is what I have.
 def rotate(matrix, angle, x, y, z):
     """
     Rotate a matrix around an axis.

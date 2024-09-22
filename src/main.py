@@ -1,17 +1,13 @@
-import math
-import ctypes
 import os
 import pygame
 import OpenGL.GL as GL
 import OpenGL.GLU as GLU
 import numpy
 
-from PIL import Image
 from pygame import Vector3
 
 from Shader import Shader
 from Texture import Texture
-from ModelLoader import OBJ
 from MatrixTools import *
 from Camera import *
 from Mesh import Mesh
@@ -20,12 +16,12 @@ dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "\\" in dirPath:
     dirPath = dirPath.replace("\\", "/")
 NUM_POINT_LIGHTS = 2
+WINDOW_SIZE = (800,600)
 
 
 if __name__ == "__main__":
     # Make a openGL compatable window
     pygame.init()
-    WINDOW_SIZE = (800,600)
     window = pygame.display.set_mode(WINDOW_SIZE,  pygame.OPENGL | pygame.DOUBLEBUF)
     clock = pygame.time.Clock()
     dt = 1.0
