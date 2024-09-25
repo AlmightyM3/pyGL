@@ -27,6 +27,10 @@ if __name__ == "__main__":
     dt = 1.0
     run = True
     
+    pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, 3)
+    pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, 4)
+    print(f"OpenGL version {pygame.display.gl_get_attribute(pygame.GL_CONTEXT_MAJOR_VERSION)}.{pygame.display.gl_get_attribute(pygame.GL_CONTEXT_MINOR_VERSION)}")
+
     lightMesh = Mesh()
     cube = Mesh() # Mesh(f"{dirPath}/assets/test.obj")
 
@@ -62,10 +66,6 @@ if __name__ == "__main__":
     lightShader.setMat4("projection", proj)
 
     GL.glEnable(GL.GL_DEPTH_TEST)
-
-    pitch = 0.0
-    yaw = -90.0
-    oldMousePos = pygame.mouse.get_pos()
     
     while run:
         pygame.display.set_caption(f"3D! | dt:{dt}, fps:{1000/dt}")
