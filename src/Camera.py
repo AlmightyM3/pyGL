@@ -15,8 +15,8 @@ class Camera:
     
     def genMatrix(self, target):
         cameraDirection = (self.position - target).normalize()
-        cameraRight = self.worldUp.cross(cameraDirection)
-        cameraUp = cameraDirection.cross(cameraRight)
+        cameraRight = self.worldUp.cross(cameraDirection).normalize()
+        cameraUp = cameraDirection.cross(cameraRight).normalize()
         return numpy.array([
             [cameraRight.x, cameraRight.y, cameraRight.z, 0.0],
             [cameraUp.x,cameraUp.y,cameraUp.z, 0.0],
