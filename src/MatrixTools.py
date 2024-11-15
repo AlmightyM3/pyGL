@@ -32,6 +32,10 @@ def rotate(matrix, angle, x, y, z):
 
     :return: The rotated matrix
     """
+    
+    if angle == 0:
+        return matrix
+
     angle = math.pi * angle / 180
     c, s = math.cos(angle), math.sin(angle)
     n = math.sqrt(x * x + y * y + z * z)
