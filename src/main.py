@@ -5,8 +5,8 @@ import OpenGL.GLU as GLU
 
 from pygame import Vector3
 
-from Camera import *
-from Node import *
+from Camera import Camera, FreeCamera
+from Node import Node, RenderNode, LightNode
 
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "\\" in dirPath:
