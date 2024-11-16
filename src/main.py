@@ -7,8 +7,6 @@ import numpy
 from pygame import Vector3
 
 from Shader import Shader
-from Texture import Texture
-from MatrixTools import *
 from Camera import *
 from Mesh import Mesh
 from Node import *
@@ -35,9 +33,9 @@ if __name__ == "__main__":
     lightMesh = Mesh()
     cube = Mesh() # Mesh(f"{dirPath}/assets/test.obj")
 
-    cubeNode = Node()
-    cubeNode2 = Node()
-    cubeNode3 = Node()
+    cubeNode = RenderNode()
+    cubeNode2 = RenderNode()
+    cubeNode3 = RenderNode()
     cubeNode2.transform.position = Vector3(1.7,0,0)
     cubeNode2.transform.scale = Vector3(0.6)
     cubeNode2.transform.updateLocalMatrix()
@@ -48,36 +46,16 @@ if __name__ == "__main__":
     cubeNode3.setParent(cubeNode2)
     cubeNode.updateWorldMatrix()
 
-    diffuseTexture = Texture(f"{dirPath}/assets/container.PNG", GL.GL_RGBA)
-    specularTexture = Texture(f"{dirPath}/assets/container_specular.PNG", GL.GL_RGBA)
+    camera = FreeCamera(WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 3.0))
 
-    camera = FreeCamera(startPos=Vector3(0.0, 0.0, 3.0))
-
-    mainShader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
-    mainShader.use()
-    trans = numpy.eye(4)
-    mainShader.setMat4("transform", trans)
-    mainShader.setMat4("view", camera.matrix)
-    proj = perspective(45, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
-    mainShader.setMat4("projection", proj)
-    mainShader.setInt("material.diffuse", 0)
-    mainShader.setInt("material.specular", 1)
-    mainShader.setFloat("material.shininess", 32.0)
     lightPositions = [Vector3(1.2,1.0,2.0), Vector3(-3,5,-8)]
     lightColors = [Vector3(1.0,1.0,1.0), Vector3(1.0,1.0,1.0)]
     lightFalloffs = [0.06, 0.06]
-    for i in range(NUM_POINT_LIGHTS):
-        mainShader.setVec3(f"lights[{i}].ambient", lightColors[i]*0.2)
-        mainShader.setVec3(f"lights[{i}].diffuse", lightColors[i]*0.5)
-        mainShader.setVec3(f"lights[{i}].specular", Vector3(1.0))
-        mainShader.setVec3(f"lights[{i}].position", lightPositions[i])
-        mainShader.setFloat(f"lights[{i}].falloff", lightFalloffs[i])
-    mainShader.setVec3("viewPos", camera.position)
 
     lightShader = Shader(f"{dirPath}/src/shaders/light.vert", f"{dirPath}/src/shaders/light.frag")
     lightShader.use()
     lightShader.setMat4("view", camera.matrix)
-    lightShader.setMat4("projection", proj)
+    lightShader.setMat4("projection", camera.proj)
 
     GL.glEnable(GL.GL_DEPTH_TEST)
     
@@ -89,8 +67,13 @@ if __name__ == "__main__":
         GL.glClearColor(0.1, 0.1, 0.1, 1.0)#0.2, 0.3, 0.3, 1.0
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
-        diffuseTexture.use(0)
-        specularTexture.use(1)
+        cubeNode.transform.rotationAngle += 0.05 * dt
+        cubeNode.transform.updateLocalMatrix()
+        cubeNode2.transform.rotationAngle += 0.1 * dt
+        cubeNode2.transform.updateLocalMatrix()
+        cubeNode3.transform.rotationAngle += 0.15 * dt
+        cubeNode3.transform.updateLocalMatrix()
+        cubeNode.updateWorldMatrix()
         
         lightShader.use()
         lightShader.setMat4("view", camera.matrix)
@@ -99,27 +82,10 @@ if __name__ == "__main__":
             lightShader.setVec3("lightColor", lightColors[i])
             lightMesh.render()
         
-        cubeNode.transform.rotationAngle += 0.1
-        cubeNode.transform.updateLocalMatrix()
-        cubeNode2.transform.rotationAngle += 0.1
-        cubeNode2.transform.updateLocalMatrix()
-        cubeNode3.transform.rotationAngle += 0.1
-        cubeNode3.transform.updateLocalMatrix()
-        cubeNode.updateWorldMatrix()
-        mainShader.use()
-        mainShader.setMat4("transform", cubeNode.worldMatrix)
-        mainShader.setMat4("view", camera.matrix)
-        mainShader.setVec3("viewPos", camera.position)
-        cube.render()
-        mainShader.setMat4("transform", cubeNode2.worldMatrix)
-        mainShader.setMat4("view", camera.matrix)
-        mainShader.setVec3("viewPos", camera.position)
-        cube.render()
-        mainShader.setMat4("transform", cubeNode3.worldMatrix)
-        mainShader.setMat4("view", camera.matrix)
-        mainShader.setVec3("viewPos", camera.position)
-        cube.render()
-        
+        cubeNode.render(camera, NUM_POINT_LIGHTS,lightPositions,lightColors,lightFalloffs)
+        cubeNode2.render(camera, NUM_POINT_LIGHTS,lightPositions,lightColors,lightFalloffs)
+        cubeNode3.render(camera, NUM_POINT_LIGHTS,lightPositions,lightColors,lightFalloffs)
+
         pygame.display.flip()
         dt = clock.tick(500)
 

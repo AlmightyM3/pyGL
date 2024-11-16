@@ -1,5 +1,14 @@
+import OpenGL.GL as GL
 from pygame import Vector3
 from MatrixTools import *
+from Mesh import Mesh
+from Shader import Shader
+from Texture import Texture
+
+import os
+dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if "\\" in dirPath:
+    dirPath = dirPath.replace("\\", "/")
 
 class Transform:
     def __init__(self):
@@ -40,3 +49,37 @@ class Node:
 
         for child in self.children:
             child.updateWorldMatrix()
+
+class RenderNode(Node):
+    def __init__(self):
+        super().__init__()
+        self.mesh = Mesh()
+
+        self.diffuseTexture = Texture(f"{dirPath}/assets/container.PNG", GL.GL_RGBA)
+        self.specularTexture = Texture(f"{dirPath}/assets/container_specular.PNG", GL.GL_RGBA)
+
+        self.shader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
+        self.shader.use()
+        self.shader.setInt("material.diffuse", 0)
+        self.shader.setInt("material.specular", 1)
+        self.shader.setFloat("material.shininess", 32.0)
+    
+    def render(self, camera, numLights,lightPositions,lightColors,lightFalloffs):
+        self.shader.use()
+        
+        self.shader.setMat4("view", camera.matrix)
+        self.shader.setVec3("viewPos", camera.position)
+        self.shader.setMat4("projection", camera.proj)
+        self.shader.setMat4("transform", self.worldMatrix)
+
+        for i in range(numLights):
+            self.shader.setVec3(f"lights[{i}].ambient", lightColors[i]*0.2)
+            self.shader.setVec3(f"lights[{i}].diffuse", lightColors[i]*0.5)
+            self.shader.setVec3(f"lights[{i}].specular", Vector3(1.0))
+            self.shader.setVec3(f"lights[{i}].position", lightPositions[i])
+            self.shader.setFloat(f"lights[{i}].falloff", lightFalloffs[i])
+
+        self.diffuseTexture.use(0)
+        self.specularTexture.use(1)
+        
+        self.mesh.render()

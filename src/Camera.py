@@ -2,13 +2,15 @@ import numpy
 import pygame
 from pygame import Vector3
 import math
+from MatrixTools import *
 
 class Camera:
-    def __init__(self, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0)):
+    def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), fov=45):
         self.position = startPos
         self.front = startFront
         self.worldUp = startUp
         self.matrix = self.genMatrix(self.position+self.front)
+        self.proj = perspective(fov, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
     
     def Update(self, dt):
         self.matrix = self.genMatrix(self.position+self.front)
@@ -30,8 +32,8 @@ class Camera:
         ], numpy.float32)).T
 
 class FreeCamera(Camera):
-    def __init__(self, startPos=Vector3(0, 0, 0), startFront=Vector3(0, 0, -1), startUp=Vector3(0, 1, 0), speed = 2.75, sensitivity = 0.1):
-        super().__init__(startPos, startFront, startUp)
+    def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), fov=45, speed = 2.75, sensitivity = 0.1):
+        super().__init__(WINDOW_SIZE, startPos, startFront, startUp, fov)
         
         self.speed = speed
         self.sensitivity = sensitivity
