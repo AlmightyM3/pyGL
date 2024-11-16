@@ -11,6 +11,7 @@ from Texture import Texture
 from MatrixTools import *
 from Camera import *
 from Mesh import Mesh
+from Node import *
 
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "\\" in dirPath:
@@ -33,6 +34,19 @@ if __name__ == "__main__":
 
     lightMesh = Mesh()
     cube = Mesh() # Mesh(f"{dirPath}/assets/test.obj")
+
+    cubeNode = Node()
+    cubeNode2 = Node()
+    cubeNode3 = Node()
+    cubeNode2.transform.position = Vector3(1.7,0,0)
+    cubeNode2.transform.scale = Vector3(0.6)
+    cubeNode2.transform.updateLocalMatrix()
+    cubeNode2.setParent(cubeNode)
+    cubeNode3.transform.position = Vector3(1.3,0,0)
+    cubeNode3.transform.scale = Vector3(0.5)
+    cubeNode3.transform.updateLocalMatrix()
+    cubeNode3.setParent(cubeNode2)
+    cubeNode.updateWorldMatrix()
 
     diffuseTexture = Texture(f"{dirPath}/assets/container.PNG", GL.GL_RGBA)
     specularTexture = Texture(f"{dirPath}/assets/container_specular.PNG", GL.GL_RGBA)
@@ -85,11 +99,27 @@ if __name__ == "__main__":
             lightShader.setVec3("lightColor", lightColors[i])
             lightMesh.render()
         
+        cubeNode.transform.rotationAngle += 0.1
+        cubeNode.transform.updateLocalMatrix()
+        cubeNode2.transform.rotationAngle += 0.1
+        cubeNode2.transform.updateLocalMatrix()
+        cubeNode3.transform.rotationAngle += 0.1
+        cubeNode3.transform.updateLocalMatrix()
+        cubeNode.updateWorldMatrix()
         mainShader.use()
+        mainShader.setMat4("transform", cubeNode.worldMatrix)
         mainShader.setMat4("view", camera.matrix)
         mainShader.setVec3("viewPos", camera.position)
         cube.render()
-
+        mainShader.setMat4("transform", cubeNode2.worldMatrix)
+        mainShader.setMat4("view", camera.matrix)
+        mainShader.setVec3("viewPos", camera.position)
+        cube.render()
+        mainShader.setMat4("transform", cubeNode3.worldMatrix)
+        mainShader.setMat4("view", camera.matrix)
+        mainShader.setVec3("viewPos", camera.position)
+        cube.render()
+        
         pygame.display.flip()
         dt = clock.tick(500)
 

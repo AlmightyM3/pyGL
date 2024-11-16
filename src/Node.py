@@ -4,7 +4,7 @@ from MatrixTools import *
 class Transform:
     def __init__(self):
         self.position = Vector3()
-        self.rotationAxis = Vector3(1,0,0)
+        self.rotationAxis = Vector3(0,1,0)
         self.rotationAngle = 0
         self.scale = Vector3(1)
 
@@ -33,11 +33,10 @@ class Node:
         self.parent = newParent
     
     def updateWorldMatrix(self):
-        if not self.parent == None and self.parent.worldMatrix:
+        if not self.parent == None:
             self.worldMatrix = numpy.dot(self.transform.localMatrix, self.parent.worldMatrix)
         else:
             self.worldMatrix = self.transform.localMatrix
 
         for child in self.children:
             child.updateWorldMatrix()
-print(Node().worldMatrix)
