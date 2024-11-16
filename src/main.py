@@ -31,18 +31,19 @@ if __name__ == "__main__":
     print(f"OpenGL version {pygame.display.gl_get_attribute(pygame.GL_CONTEXT_MAJOR_VERSION)}.{pygame.display.gl_get_attribute(pygame.GL_CONTEXT_MINOR_VERSION)}")
 
     lightMesh = Mesh()
-    cube = Mesh() # Mesh(f"{dirPath}/assets/test.obj")
 
-    cubeNode = RenderNode()
-    cubeNode2 = RenderNode()
-    cubeNode3 = RenderNode()
-    cubeNode2.transform.position = Vector3(1.7,0,0)
-    cubeNode2.transform.scale = Vector3(0.6)
-    cubeNode2.transform.updateLocalMatrix()
+    rootNode = Node()
+
+    cubeNode = RenderNode(meshPath=f"{dirPath}/assets/Suzanne.obj")
+    cubeNode2 = RenderNode(diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
+    cubeNode3 = RenderNode(diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
+    cubeNode.transform.scale = Vector3(0.7)
+    cubeNode.setParent(rootNode)
+    cubeNode2.transform.position = Vector3(4,0,0)
+    cubeNode2.transform.scale = Vector3(1.2)
     cubeNode2.setParent(cubeNode)
     cubeNode3.transform.position = Vector3(1.3,0,0)
     cubeNode3.transform.scale = Vector3(0.5)
-    cubeNode3.transform.updateLocalMatrix()
     cubeNode3.setParent(cubeNode2)
     cubeNode.updateWorldMatrix()
 
@@ -68,12 +69,10 @@ if __name__ == "__main__":
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         cubeNode.transform.rotationAngle += 0.05 * dt
-        cubeNode.transform.updateLocalMatrix()
         cubeNode2.transform.rotationAngle += 0.1 * dt
-        cubeNode2.transform.updateLocalMatrix()
         cubeNode3.transform.rotationAngle += 0.15 * dt
-        cubeNode3.transform.updateLocalMatrix()
-        cubeNode.updateWorldMatrix()
+        
+        rootNode.updateWorldMatrix()
         
         lightShader.use()
         lightShader.setMat4("view", camera.matrix)
@@ -82,9 +81,7 @@ if __name__ == "__main__":
             lightShader.setVec3("lightColor", lightColors[i])
             lightMesh.render()
         
-        cubeNode.render(camera, NUM_POINT_LIGHTS,lightPositions,lightColors,lightFalloffs)
-        cubeNode2.render(camera, NUM_POINT_LIGHTS,lightPositions,lightColors,lightFalloffs)
-        cubeNode3.render(camera, NUM_POINT_LIGHTS,lightPositions,lightColors,lightFalloffs)
+        rootNode.renderChildren(camera, NUM_POINT_LIGHTS,lightPositions,lightColors,lightFalloffs)
 
         pygame.display.flip()
         dt = clock.tick(500)

@@ -12,15 +12,50 @@ if "\\" in dirPath:
 
 class Transform:
     def __init__(self):
-        self.position = Vector3()
-        self.rotationAxis = Vector3(0,1,0)
-        self.rotationAngle = 0
-        self.scale = Vector3(1)
+        self._position = Vector3()
+        self._rotationAxis = Vector3(0,1,0)
+        self._rotationAngle = 0
+        self._scale = Vector3(1)
+
+        self.changed = False
 
         self.updateLocalMatrix()
+
+    @property
+    def position(self):
+        return self._position
+    @position.setter
+    def position(self, new_position):
+        self._position = new_position
+        self.changed = True
+
+    @property
+    def rotationAxis(self):
+        return self._rotationAxis
+    @rotationAxis.setter
+    def rotationAxis(self, new_rotationAxis):
+        self._rotationAxis = new_rotationAxis
+        self.changed = True
+
+    @property
+    def rotationAngle(self):
+        return self._rotationAngle
+    @rotationAngle.setter
+    def rotationAngle(self, new_rotationAngle):
+        self._rotationAngle = new_rotationAngle
+        self.changed = True
+
+    @property
+    def scale(self):
+        return self._scale
+    @scale.setter
+    def scale(self, new_scale):
+        self._scale = new_scale
+        self.changed = True
     
     def updateLocalMatrix(self):
-        self.localMatrix =  translate(rotate(scale(numpy.eye(4), self.scale.x, self.scale.y, self.scale.z), self.rotationAngle, self.rotationAxis.x, self.rotationAxis.y, self.rotationAxis.z), self.position.x, self.position.y, self.position.z)
+        self.localMatrix =  translate(rotate(scale(numpy.eye(4), self._scale.x, self._scale.y, self._scale.z), self._rotationAngle, self._rotationAxis.x, self._rotationAxis.y, self._rotationAxis.z), self._position.x, self._position.y, self._position.z)
+        self.changed = False
 
 class Node:
     def __init__(self):
@@ -42,6 +77,9 @@ class Node:
         self.parent = newParent
     
     def updateWorldMatrix(self):
+        if self.transform.changed:
+            self.transform.updateLocalMatrix()
+        
         if not self.parent == None:
             self.worldMatrix = numpy.dot(self.transform.localMatrix, self.parent.worldMatrix)
         else:
@@ -49,14 +87,18 @@ class Node:
 
         for child in self.children:
             child.updateWorldMatrix()
+    
+    def renderChildren(self, camera, numLights,lightPositions,lightColors,lightFalloffs):
+        for child in self.children:
+            child.renderChildren(camera, numLights,lightPositions,lightColors,lightFalloffs)
 
 class RenderNode(Node):
-    def __init__(self):
+    def __init__(self, meshPath="", diffusePath=f"{dirPath}/assets/blank.PNG", specularPath=f"{dirPath}/assets/blank.PNG"):
         super().__init__()
-        self.mesh = Mesh()
+        self.mesh = Mesh(meshPath)
 
-        self.diffuseTexture = Texture(f"{dirPath}/assets/container.PNG", GL.GL_RGBA)
-        self.specularTexture = Texture(f"{dirPath}/assets/container_specular.PNG", GL.GL_RGBA)
+        self.diffuseTexture = Texture(diffusePath, GL.GL_RGBA)
+        self.specularTexture = Texture(specularPath, GL.GL_RGBA)
 
         self.shader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
         self.shader.use()
@@ -83,3 +125,8 @@ class RenderNode(Node):
         self.specularTexture.use(1)
         
         self.mesh.render()
+    
+    def renderChildren(self, camera, numLights,lightPositions,lightColors,lightFalloffs):
+        self.render(camera, numLights,lightPositions,lightColors,lightFalloffs)
+        for child in self.children:
+            child.renderChildren(camera, numLights,lightPositions,lightColors,lightFalloffs)
