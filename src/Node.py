@@ -115,10 +115,11 @@ class LightNode(Node):
             child.renderChildren(camera, lights)
 
 class UIPanelNode(Node):
-    def __init__(self, roundness=0.0, useWorldPos = False):
+    def __init__(self, color=Vector3(1), roundness=0.0, useWorldPos = False):
         super().__init__()
         self.mesh = Mesh("UI", False, useWorldPos)
 
+        self.color = color
         self.roundness=roundness
         self.useWorldPos = useWorldPos
         if not self.useWorldPos:
@@ -131,6 +132,7 @@ class UIPanelNode(Node):
         self.shader.use()
         
         self.shader.setFloat("Roundness", self.roundness)
+        self.shader.setVec3("color", self.color)
 
         if self.useWorldPos:
             self.shader.setMat4("view", camera.matrix)
