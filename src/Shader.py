@@ -11,12 +11,7 @@ class Shader:
         GL.glCompileShader(vertexShader)
 
         log = GL.glGetShaderInfoLog(vertexShader)
-        if isinstance(log, bytes):
-            log = log.decode()
-        for line in log.split("\n"):
-            if line == "":
-                continue
-            print(line)
+        self._printDebugLog(log)
 
         with open(fragmentPath, 'r') as file:
             fragmentShaderSource = file.read()
@@ -26,12 +21,7 @@ class Shader:
         GL.glCompileShader(fragmentShader)
         
         log = GL.glGetShaderInfoLog(fragmentShader)
-        if isinstance(log, bytes):
-            log = log.decode()
-        for line in log.split("\n"):
-            if line == "":
-                continue
-            print(line)
+        self._printDebugLog(log)
 
         self.ID = GL.glCreateProgram()
         GL.glAttachShader(self.ID, vertexShader)
@@ -39,16 +29,19 @@ class Shader:
         GL.glLinkProgram(self.ID)
 
         log = GL.glGetProgramInfoLog(self.ID)
+        self._printDebugLog(log)
+        
+        GL.glDeleteShader(vertexShader)
+        GL.glDeleteShader(fragmentShader)
+
+    def _printDebugLog(self, log):
         if isinstance(log, bytes):
             log = log.decode()
         for line in log.split("\n"):
             if line == "":
                 continue
             print(line)
-        
-        GL.glDeleteShader(vertexShader)
-        GL.glDeleteShader(fragmentShader)
-
+    
     def use(self):
         GL.glUseProgram(self.ID)
     

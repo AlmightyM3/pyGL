@@ -1,6 +1,6 @@
 import numpy
 from pygame import Vector3
-from MatrixTools import translate, rotate, scale
+from MatrixTools import translateVec3, rotateVec3, scaleVec3
 
 class Transform:
     def __init__(self):
@@ -46,5 +46,5 @@ class Transform:
         self.changed = True
     
     def updateLocalMatrix(self):
-        self.localMatrix =  translate(rotate(scale(numpy.eye(4), self._scale.x, self._scale.y, self._scale.z), self._rotationAngle, self._rotationAxis.x, self._rotationAxis.y, self._rotationAxis.z), self._position.x, self._position.y, self._position.z)
+        self.localMatrix =  translateVec3(rotateVec3(scaleVec3(numpy.eye(4), self._scale), self._rotationAngle, self._rotationAxis), self._position)
         self.changed = False

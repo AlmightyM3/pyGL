@@ -1,6 +1,8 @@
 import numpy
 import math
 
+def translateVec3(matrix, v):
+    return translate(matrix, v.x, v.y, v.z)
 def translate(matrix, x, y, z):
     translation_matrix = numpy.array([
             [1.0, 0.0, 0.0, x  ],
@@ -10,6 +12,8 @@ def translate(matrix, x, y, z):
         ], dtype=matrix.dtype).T
     return numpy.dot(matrix, translation_matrix)
 
+def scaleVec3(matrix, v):
+    return scale(matrix, v.x, v.y, v.z)
 def scale(matrix, x, y, z):
     translation_matrix = numpy.array([
             [x  , 0.0, 0.0, 0.0],
@@ -19,6 +23,8 @@ def scale(matrix, x, y, z):
         ], dtype=matrix.dtype).T
     return numpy.dot(matrix, translation_matrix)
 
+def rotateVec3(matrix, a, v):
+    return rotate(matrix, a, v.x, v.y, v.z)
 # All further functions are taken from the Pygame-ce glcube example. I hope to rewrite them myself once I actually understand how the math works, but for now this is what I have.
 def rotate(matrix, angle, x, y, z):
     """
