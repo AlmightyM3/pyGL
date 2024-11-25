@@ -5,9 +5,10 @@ import ctypes
 from ModelLoader import OBJ
 
 class Mesh:
-    def __init__(self, path = "", backFaceCulling = True):
+    def __init__(self, path = "", backFaceCulling = True, depthBuffer = True):
         self.backFaceCulling = backFaceCulling
-        if path == "":
+        self.depthBuffer = depthBuffer
+        if path == "" or path == "CUBE":
             self.vertices = numpy.array([
                 #positions          normals           texture coords
                 0.5, -0.5, -0.5,   0.0,  0.0, -1.0,  1.0, 0.0,
@@ -49,6 +50,19 @@ class Mesh:
                 16,17,18, 18,19,16,
                 22,21,20, 20,23,22
             ], numpy.uint32)
+        elif path == "UI":
+            self.vertices = numpy.array([
+                #positions         normals           texture coords
+                 0.5,  0.5, 0.0,   0.0,  0.0, 1.0,   1.0, 1.0,
+                 0.5, -0.5, 0.0,   0.0,  0.0, 1.0,   1.0, 0.0,
+                -0.5, -0.5, 0.0,   0.0,  0.0, 1.0,   0.0, 0.0,
+                -0.5,  0.5, 0.0,   0.0,  0.0, 1.0,   0.0, 1.0
+            ], numpy.float32)
+
+            self.indices = numpy.array([
+                3, 1, 0,
+                3, 2, 1 
+            ], numpy.uint32)
         else:
             modle = OBJ(path)
             self.vertices = modle.vertices
@@ -73,9 +87,14 @@ class Mesh:
         GL.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, self.indices.nbytes, self.indices, GL.GL_STATIC_DRAW)
 
     def render(self):
-        if(self.backFaceCulling):
+        if self.backFaceCulling:
             GL.glEnable(GL.GL_CULL_FACE)
         else:
             GL.glDisable(GL.GL_CULL_FACE)
+        if self.depthBuffer:
+            GL.glEnable(GL.GL_DEPTH_TEST)
+        else:
+            GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glBindVertexArray(self.VAO)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.EBO)
         GL.glDrawElements(GL.GL_TRIANGLES, len(self.indices), GL.GL_UNSIGNED_INT, None)

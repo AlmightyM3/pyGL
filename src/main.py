@@ -6,7 +6,7 @@ import OpenGL.GLU as GLU
 from pygame import Vector3
 
 from Camera import Camera, FreeCamera
-from Node import Node, RenderNode, LightNode
+from Node import Node, RenderNode, LightNode, UIPanelNode
 
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "\\" in dirPath:
@@ -42,6 +42,11 @@ if __name__ == "__main__":
     cubeNode3.transform.scale = Vector3(0.5)
     cubeNode3.setParent(cubeNode2)
 
+    uiTestNode = UIPanelNode(roundness=0.1)
+    uiTestNode.transform.position = Vector3(-0.5,-0.5,0)
+    uiTestNode.transform.scale = Vector3(0.5)
+    uiTestNode.setParent(rootNode)
+
     light1=LightNode(lights)
     light2=LightNode(lights)
     light1.transform.position = Vector3(1.2,1.0,2.0)
@@ -50,8 +55,6 @@ if __name__ == "__main__":
     light2.setParent(rootNode)
 
     camera = FreeCamera(WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 3.0))
-
-    GL.glEnable(GL.GL_DEPTH_TEST)
     
     while run:
         pygame.display.set_caption(f"3D! | dt:{dt}, fps:{1000/dt}")

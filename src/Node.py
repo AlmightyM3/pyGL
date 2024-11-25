@@ -113,3 +113,36 @@ class LightNode(Node):
         self.render(camera)
         for child in self.children:
             child.renderChildren(camera, lights)
+
+class UIPanelNode(Node):
+    def __init__(self, roundness=0.0, useWorldPos = False):
+        super().__init__()
+        self.mesh = Mesh("UI", False, useWorldPos)
+
+        self.roundness=roundness
+        self.useWorldPos = useWorldPos
+        if not self.useWorldPos:
+            self.transform.position += Vector3(0,0,-1)
+
+        self.shader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/uiPanel.frag")
+        self.shader.use()
+    
+    def render(self, camera):
+        self.shader.use()
+        
+        self.shader.setFloat("Roundness", self.roundness)
+
+        if self.useWorldPos:
+            self.shader.setMat4("view", camera.matrix)
+            self.shader.setMat4("projection", camera.proj)
+        else:
+            self.shader.setMat4("view", numpy.eye(4))
+            self.shader.setMat4("projection", numpy.eye(4))
+        self.shader.setMat4("transform", self.worldMatrix)
+        
+        self.mesh.render()
+    
+    def renderChildren(self, camera, lights):
+        self.render(camera)
+        for child in self.children:
+            child.renderChildren(camera, lights)

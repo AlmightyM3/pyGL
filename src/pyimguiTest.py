@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import os
 from imgui.integrations.pygame import PygameRenderer
 import OpenGL.GL as GL
 import imgui
@@ -8,6 +9,10 @@ import sys
 from pygame import Vector3
 from Camera import FreeCamera
 from Node import Node, RenderNode, LightNode
+
+dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if "\\" in dirPath:
+    dirPath = dirPath.replace("\\", "/")
 
 def main():
     pygame.init()
@@ -25,11 +30,24 @@ def main():
 
     rootNode = Node()
     cubeNode = RenderNode()
-    # cubeNode.setParent(rootNode)
+    cubeNode.setParent(rootNode)
+    cubeNode2 = RenderNode(diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
+    cubeNode2.transform.position = Vector3(2,0,0)
+    cubeNode2.transform.scale = Vector3(0.7)
+    cubeNode2.setParent(rootNode)
 
-    # light=LightNode(lights)
-    # light.transform.position = Vector3(1.2,1.0,2.0)
-    # light.setParent(cubeNode)
+    light=LightNode(lights)
+    light.transform.position = Vector3(1.2,1.0,2.0)
+    light.setParent(rootNode)
+
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER,0)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+    GL.glBindVertexArray(0)
+    GL.glUseProgram(0)
+    GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
+    # for i in range(GL.glGetIntegerv(GL.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)):
+    #     GL.glActiveTexture(GL.GL_TEXTURE0+i)
+    #     GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
 
     camera = FreeCamera(size, startPos=Vector3(0.0, 0.0, 3.0))
 
@@ -50,35 +68,44 @@ def main():
 
         imgui.new_frame()
 
-        # if imgui.begin_main_menu_bar():
-        #     if imgui.begin_menu("File", True):
+        if imgui.begin_main_menu_bar():
+            if imgui.begin_menu("File", True):
 
-        #         clicked_quit, selected_quit = imgui.menu_item(
-        #             "Quit", "Cmd+Q", False, True
-        #         )
+                clicked_quit, selected_quit = imgui.menu_item(
+                    "Quit", "Cmd+Q", False, True
+                )
 
-        #         if clicked_quit:
-        #             sys.exit(0)
+                if clicked_quit:
+                    sys.exit(0)
 
-        #         imgui.end_menu()
-        #     imgui.end_main_menu_bar()
+                imgui.end_menu()
+            imgui.end_main_menu_bar()
 
         imgui.show_test_window()
 
-        # if show_custom_window:
-        #     is_expand, show_custom_window = imgui.begin("Custom window", True)
-        #     if is_expand:
-        #         imgui.text("Bar")
-        #         imgui.text_colored("Eggs", 0.2, 1.0, 0.0)
-        #     imgui.end()
+        if show_custom_window:
+            is_expand, show_custom_window = imgui.begin("Custom window", True)
+            if is_expand:
+                imgui.text("Bar")
+                imgui.text_colored("Eggs", 0.2, 1.0, 0.0)
+            imgui.end()
 
         GL.glClearColor(0.1, 0.1, 0.1, 1)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         camera.Update(dt)
         rootNode.updateWorldMatrix()
-        rootNode.renderChildren(camera, lights)
 
+        rootNode.renderChildren(camera, lights)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER,0)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
+        # for i in range(5):#GL.glGetIntegerv(GL.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+        #     GL.glActiveTexture(GL.GL_TEXTURE0+i)
+        #     GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
+        
         imgui.render()
         impl.render(imgui.get_draw_data())
 
