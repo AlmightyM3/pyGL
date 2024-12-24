@@ -60,7 +60,7 @@ class FreeCamera(Camera):
         offsetX = mousePos[0]-self.oldMousePos[0]
         offsetY = self.oldMousePos[1]-mousePos[1]
         self.oldMousePos = mousePos
-        if pygame.mouse.get_pressed()[0]:
+        if pygame.mouse.get_pressed()[2]:
             self.yaw += offsetX * self.sensitivity
             self.pitch += offsetY * self.sensitivity
             self.yaw %= 360

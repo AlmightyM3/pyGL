@@ -114,6 +114,7 @@ class LightNode(Node):
         for child in self.children:
             child.renderChildren(camera, lights)
 
+# Depth and orthographic projection needs rework before use
 class UIPanelNode(Node):
     def __init__(self, color=Vector3(1), roundness=0.0, useWorldPos = False):
         super().__init__()

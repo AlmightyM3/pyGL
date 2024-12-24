@@ -1,5 +1,8 @@
+from __future__ import absolute_import
 import os
+from imgui.integrations.pygame import PygameRenderer
 import pygame
+import imgui
 import OpenGL.GL as GL
 import OpenGL.GLU as GLU
 
@@ -13,6 +16,13 @@ if "\\" in dirPath:
     dirPath = dirPath.replace("\\", "/")
 WINDOW_SIZE = (800,600)
 
+def makeImGUIHappy():
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER,0)
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+    GL.glBindVertexArray(0)
+    GL.glUseProgram(0)
+    GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
+    GL.glActiveTexture(GL.GL_TEXTURE0)
 
 if __name__ == "__main__":
     # Make a openGL compatable window
@@ -42,11 +52,6 @@ if __name__ == "__main__":
     cubeNode3.transform.scale = Vector3(0.5)
     cubeNode3.setParent(cubeNode2)
 
-    uiTestNode = UIPanelNode(roundness=0.1)
-    uiTestNode.transform.position = Vector3(-0.5,-0.5,0)
-    uiTestNode.transform.scale = Vector3(0.5)
-    uiTestNode.setParent(rootNode)
-
     light1=LightNode(lights)
     light2=LightNode(lights)
     light1.transform.position = Vector3(1.2,1.0,2.0)
@@ -55,6 +60,14 @@ if __name__ == "__main__":
     light2.setParent(rootNode)
 
     camera = FreeCamera(WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 3.0))
+
+    makeImGUIHappy()
+
+    imgui.create_context()
+    impl = PygameRenderer()
+
+    io = imgui.get_io()
+    io.display_size = WINDOW_SIZE
     
     while run:
         pygame.display.set_caption(f"3D! | dt:{dt}, fps:{1000/dt}")
@@ -72,10 +85,34 @@ if __name__ == "__main__":
         
         rootNode.renderChildren(camera, lights)
 
+        makeImGUIHappy()
+
+        imgui.new_frame()
+
+        if imgui.begin_main_menu_bar():
+            if imgui.begin_menu("File", True):
+
+                clicked_quit, selected_quit = imgui.menu_item(
+                    "Quit", "ESC", False, True
+                )
+
+                if clicked_quit:
+                    run=False
+
+                imgui.end_menu()
+            imgui.end_main_menu_bar()
+
+        imgui.show_test_window()
+        
+        imgui.render()
+        impl.render(imgui.get_draw_data())
+
         pygame.display.flip()
         dt = clock.tick(500)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 run = False
+            impl.process_event(event)
+        impl.process_inputs()
     pygame.quit()
