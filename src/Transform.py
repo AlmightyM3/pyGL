@@ -34,7 +34,7 @@ class Transform:
         return self._rotationAngle
     @rotationAngle.setter
     def rotationAngle(self, new_rotationAngle):
-        self._rotationAngle = new_rotationAngle
+        self._rotationAngle = new_rotationAngle%360
         self.changed = True
 
     @property

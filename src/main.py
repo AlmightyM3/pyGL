@@ -38,11 +38,12 @@ if __name__ == "__main__":
 
     lights: list[LightNode] = []
 
-    rootNode = Node()
+    rootNode = Node("Root Node")
+    inspectedNode:Node = rootNode
 
-    cubeNode1 = RenderNode(meshPath=f"{dirPath}/assets/Suzanne.obj")
-    cubeNode2 = RenderNode(diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
-    cubeNode3 = RenderNode(diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
+    cubeNode1 = RenderNode(name="Suzanne", meshPath=f"{dirPath}/assets/Suzanne.obj")
+    cubeNode2 = RenderNode(name="Box 0", diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
+    cubeNode3 = RenderNode(name="Box 1", diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
     cubeNode1.transform.scale = Vector3(0.7)
     cubeNode1.setParent(rootNode)
     cubeNode2.transform.position = Vector3(4,0,0)
@@ -52,8 +53,8 @@ if __name__ == "__main__":
     cubeNode3.transform.scale = Vector3(0.5)
     cubeNode3.setParent(cubeNode2)
 
-    light1=LightNode(lights)
-    light2=LightNode(lights)
+    light1=LightNode(lights, name="Light 0")
+    light2=LightNode(lights, name="Light 1")
     light1.transform.position = Vector3(1.2,1.0,2.0)
     light2.transform.position = Vector3(-3,5,-8)
     light1.setParent(rootNode)
@@ -102,7 +103,16 @@ if __name__ == "__main__":
                 imgui.end_menu()
             imgui.end_main_menu_bar()
 
-        imgui.show_test_window()
+        #imgui.show_test_window()
+        imgui.begin("Node Tree")
+        clickedNode = rootNode.treeUI()
+        if clickedNode:
+            inspectedNode = clickedNode
+        imgui.end()
+        
+        if imgui.begin("Node Inspector"):
+            inspectedNode.inspectorUI()
+        imgui.end()
         
         imgui.render()
         impl.render(imgui.get_draw_data())
