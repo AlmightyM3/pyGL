@@ -14,7 +14,7 @@ from Node import Node, RenderNode, LightNode, UIPanelNode
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "\\" in dirPath:
     dirPath = dirPath.replace("\\", "/")
-WINDOW_SIZE = (800,600)
+WINDOW_SIZE = (1200,900)
 
 def makeImGUIHappy():
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER,0)
@@ -92,14 +92,11 @@ if __name__ == "__main__":
 
         if imgui.begin_main_menu_bar():
             if imgui.begin_menu("File", True):
-
                 clicked_quit, selected_quit = imgui.menu_item(
                     "Quit", "ESC", False, True
                 )
-
                 if clicked_quit:
                     run=False
-
                 imgui.end_menu()
             imgui.end_main_menu_bar()
 
@@ -111,7 +108,7 @@ if __name__ == "__main__":
         imgui.end()
         
         if imgui.begin("Node Inspector"):
-            inspectedNode.inspectorUI()
+            inspectedNode.inspectorUI(rootNode)
         imgui.end()
         
         imgui.render()

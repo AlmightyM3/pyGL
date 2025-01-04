@@ -68,7 +68,7 @@ class Node:
                 clicked=self
             imgui.unindent()
         return clicked
-    def inspectorUI(self):
+    def inspectorUI(self, rootNode):
         nChanged, newName = imgui.input_text('Object Name', self.name)
         if nChanged:
             self.name = newName
@@ -93,6 +93,20 @@ class Node:
         imgui.unindent()
 
         imgui.text(f"\nNum Children: {len(self.children)}")
+        pChanged, pValue = imgui.input_text('Parent', self.parent.name if self.parent else "")
+        if pChanged:
+            newParent = rootNode.getFromName(pValue)
+            if newParent:
+                self.setParent(newParent)
+    
+    def getFromName(self, name):
+        if self.name == name:
+            return self
+        for child in self.children:
+            childOut = child.getFromName(name)
+            if childOut:
+                return childOut
+        return None
 
 class RenderNode(Node):
     def __init__(self, name="Unnamed RenderNode", meshPath="", diffusePath=f"{dirPath}/assets/blank.PNG", specularPath=f"{dirPath}/assets/blank.PNG"):
@@ -133,8 +147,8 @@ class RenderNode(Node):
         for child in self.children:
             child.renderChildren(camera, lights)
     
-    def inspectorUI(self):
-        super().inspectorUI()
+    def inspectorUI(self, rootNode):
+        super().inspectorUI(rootNode)
         imgui.text(f"\nMesh: {self.mesh}")
         imgui.text(f"Diffuse Texture: {self.diffuseTexture}")
         imgui.text(f"Specular Texture: {self.specularTexture}")
@@ -168,8 +182,8 @@ class LightNode(Node):
         for child in self.children:
             child.renderChildren(camera, lights)
 
-    def inspectorUI(self):
-        super().inspectorUI()
+    def inspectorUI(self, rootNode):
+        super().inspectorUI(rootNode)
         imgui.text(f"\nMesh: {self.mesh}")
         imgui.text(f"")
         cChanged, cValues = imgui.color_edit3("Color",*self.color)
