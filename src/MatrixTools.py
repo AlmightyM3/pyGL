@@ -25,6 +25,21 @@ def scale(matrix, x, y, z):
 
 def rotateVec3(matrix, a, v):
     return rotate(matrix, a, v.x, v.y, v.z)
+
+def orthographic(fovy, aspect, znear, zfar):
+    h = math.tan(fovy / 360.0 * math.pi) * znear
+    w = h * aspect
+    
+    return numpy.array(
+        [
+            [1/(-w), 0, 0, 0],
+            [0, 1/(-h), 0, 0],
+            [0, 0, -2/(zfar-znear), 0],
+            [0, 0, 0, 1],
+        ],
+        dtype=numpy.float32,
+    )
+
 # All further functions are taken from the Pygame-ce glcube example. I hope to rewrite them myself once I actually understand how the math works, but for now this is what I have.
 def rotate(matrix, angle, x, y, z):
     """
@@ -59,7 +74,7 @@ def rotate(matrix, angle, x, y, z):
     matrix[...] = numpy.dot(matrix, rotation_matrix)
     return matrix
 
-def frustum(left, right, bottom, top, znear, zfar):
+def frustumPerspective(left, right, bottom, top, znear, zfar):
     """
     Build a perspective matrix from the clipping planes, or camera 'frustrum' volume.
 
@@ -96,4 +111,4 @@ def perspective(fovy, aspect, znear, zfar):
     """
     h = math.tan(fovy / 360.0 * math.pi) * znear
     w = h * aspect
-    return frustum(-w, w, -h, h, znear, zfar)
+    return frustumPerspective(-w, w, -h, h, znear, zfar)
