@@ -45,9 +45,7 @@ def main():
     GL.glBindVertexArray(0)
     GL.glUseProgram(0)
     GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
-    # for i in range(GL.glGetIntegerv(GL.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)):
-    #     GL.glActiveTexture(GL.GL_TEXTURE0+i)
-    #     GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
+    GL.glActiveTexture(GL.GL_TEXTURE0)
 
     camera = FreeCamera(size, startPos=Vector3(0.0, 0.0, 3.0))
 
@@ -65,6 +63,20 @@ def main():
                 sys.exit(0)
             impl.process_event(event)
         impl.process_inputs()
+
+        GL.glClearColor(0.1, 0.1, 0.1, 1)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+        camera.Update(dt)
+        rootNode.updateWorldMatrix()
+        rootNode.renderChildren(camera, lights)
+
+
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER,0)
+        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+        GL.glBindVertexArray(0)
+        GL.glUseProgram(0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
+        GL.glActiveTexture(GL.GL_TEXTURE0)
 
         imgui.new_frame()
 
@@ -89,22 +101,6 @@ def main():
                 imgui.text("Bar")
                 imgui.text_colored("Eggs", 0.2, 1.0, 0.0)
             imgui.end()
-
-        GL.glClearColor(0.1, 0.1, 0.1, 1)
-        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-
-        camera.Update(dt)
-        rootNode.updateWorldMatrix()
-
-        rootNode.renderChildren(camera, lights)
-        GL.glBindBuffer(GL.GL_ARRAY_BUFFER,0)
-        GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
-        GL.glBindVertexArray(0)
-        GL.glUseProgram(0)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
-        # for i in range(5):#GL.glGetIntegerv(GL.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
-        #     GL.glActiveTexture(GL.GL_TEXTURE0+i)
-        #     GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
         
         imgui.render()
         impl.render(imgui.get_draw_data())
