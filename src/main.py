@@ -53,6 +53,14 @@ if __name__ == "__main__":
     cubeNode3.transform.scale = Vector3(0.5)
     cubeNode3.setParent(cubeNode2)
 
+    teapot = RenderNode(name="Utah Teapot", meshPath=f"{dirPath}/assets/teapot.obj")
+    teapot.transform.scale = Vector3(0.25)
+    teapot.transform.position = Vector3(-4,0,-1)
+    teapot.setParent(rootNode)
+    uvTest = RenderNode(name="uvTest", diffusePath=f"{dirPath}/assets/UV_Grid.jpg")
+    uvTest.transform.position = Vector3(5,0,0)
+    uvTest.setParent(rootNode)
+
     light1=LightNode(lights, name="Light 0")
     light2=LightNode(lights, name="Light 1")
     light1.transform.position = Vector3(1.2,1.0,2.0)

@@ -8,6 +8,8 @@ class OBJ:
         faces = []
         for line in open(path, "r"):
             values = line.split()
+            if not values:
+                continue
             match values[0]:
                 case "o":
                     self.name = values[1]
