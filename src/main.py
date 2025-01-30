@@ -57,9 +57,14 @@ if __name__ == "__main__":
     teapot.transform.scale = Vector3(0.25)
     teapot.transform.position = Vector3(-4,0,-1)
     teapot.setParent(rootNode)
+
     uvTest = RenderNode(name="uvTest", diffusePath=f"{dirPath}/assets/UV_Grid.jpg")
     uvTest.transform.position = Vector3(5,0,0)
     uvTest.setParent(rootNode)
+    uvTestTri = RenderNode(name="uvTest", meshPath=f"{dirPath}/assets/test.obj", diffusePath=f"{dirPath}/assets/UV_Grid.jpg")
+    uvTestTri.transform.scale = Vector3(0.25)
+    uvTestTri.transform.position = Vector3(0,1,0)
+    uvTestTri.setParent(uvTest)
 
     light1=LightNode(lights, name="Light 0")
     light2=LightNode(lights, name="Light 1")
@@ -69,6 +74,8 @@ if __name__ == "__main__":
     light2.setParent(rootNode)
 
     camera = FreeCamera(WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 3.0))
+
+    shouldMakeCube = False
 
     makeImGUIHappy()
 
@@ -82,6 +89,11 @@ if __name__ == "__main__":
         pygame.display.set_caption(f"3D! | dt:{dt}, fps:{1000/dt}")
 
         camera.Update(dt)
+
+        if shouldMakeCube:
+            shouldMakeCube=False
+            cube = RenderNode(name="unnamed cube")
+            cube.setParent(rootNode)
 
         cubeNode1.transform.rotationAngle += 0.05 * dt
         cubeNode2.transform.rotationAngle += 0.1 * dt
@@ -105,6 +117,13 @@ if __name__ == "__main__":
                 )
                 if clicked_quit:
                     run=False
+                imgui.end_menu()
+            if imgui.begin_menu("Edit", True):
+                clicked_AddCube, selected_AddCube = imgui.menu_item(
+                    "Add Cube", "", False, True
+                )
+                if clicked_AddCube:
+                    shouldMakeCube=True
                 imgui.end_menu()
             imgui.end_main_menu_bar()
 
