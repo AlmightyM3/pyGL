@@ -54,7 +54,7 @@ def rotate(matrix, angle, x, y, z):
     :return: The rotated matrix
     """
     
-    if angle == 0:
+    if angle == 0 or (x==0 and y==0 and z==0):
         return matrix
 
     angle = math.pi * angle / 180

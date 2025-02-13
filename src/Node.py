@@ -131,10 +131,11 @@ class RenderNode(Node):
         self.shader.setMat4("transform", self.worldMatrix)
 
         for i in range(len(lights)):
+            self.shader.setBool(f"lights[{i}].isDirectional", lights[i].isDirectional)
             self.shader.setVec3(f"lights[{i}].ambient", lights[i].color*0.2)
             self.shader.setVec3(f"lights[{i}].diffuse", lights[i].color*0.5)
             self.shader.setVec3(f"lights[{i}].specular", Vector3(1.0))
-            self.shader.setVec3(f"lights[{i}].position", lights[i].transform.position)
+            self.shader.setVec3(f"lights[{i}].position", lights[i].parent.worldMatrix.dot([*lights[i].transform.position,0]))
             self.shader.setFloat(f"lights[{i}].falloff", lights[i].falloff)
 
         self.diffuseTexture.use(0)
@@ -154,13 +155,14 @@ class RenderNode(Node):
         imgui.text(f"Specular Texture: {self.specularTexture}")
 
 class LightNode(Node):
-    def __init__(self, lights, name="Unnamed LightNode", color=Vector3(1), falloff=0.06):
+    def __init__(self, lights, name="Unnamed LightNode", color=Vector3(1), falloff=0.06, isDirectional=False):
         super().__init__(name)
         self.mesh = Mesh()
 
         self.transform.scale = Vector3(0.2)
         self.color = color
-        self.falloff = falloff
+        self.falloff = falloff*(1-isDirectional)
+        self.isDirectional = isDirectional
 
         self.shader = Shader(f"{dirPath}/src/shaders/light.vert", f"{dirPath}/src/shaders/light.frag")
 
@@ -186,6 +188,11 @@ class LightNode(Node):
         super().inspectorUI(rootNode)
         imgui.text(f"\nMesh: {self.mesh}")
         imgui.text(f"")
+        dChanged, dValue = imgui.checkbox("Is Directional",self.isDirectional)
+        if dChanged:
+            self.isDirectional = dValue
+            self.falloff *= (1-self.isDirectional)
+        
         cChanged, cValues = imgui.color_edit3("Color",*self.color)
         if cChanged:
             self.color = Vector3(cValues)

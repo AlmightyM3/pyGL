@@ -66,12 +66,12 @@ if __name__ == "__main__":
     uvTestTri.transform.position = Vector3(0,1,0)
     uvTestTri.setParent(uvTest)
 
-    light1=LightNode(lights, name="Light 0")
-    light2=LightNode(lights, name="Light 1")
-    light1.transform.position = Vector3(1.2,1.0,2.0)
-    light2.transform.position = Vector3(-3,5,-8)
+    light0=LightNode(lights, name="Light 0")
+    light1=LightNode(lights, name="Light 1", isDirectional=True)
+    light0.transform.position = Vector3(1.2,1.0,2.0)
+    light1.transform.position = Vector3(-3,5,-8)
+    light0.setParent(rootNode)
     light1.setParent(rootNode)
-    light2.setParent(rootNode)
 
     camera = FreeCamera(WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 3.0))
 

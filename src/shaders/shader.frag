@@ -10,6 +10,7 @@ struct Material {
 uniform Material material;
 
 struct Light {
+    bool isDirectional;
     vec3 position;
   
     vec3 ambient;
@@ -30,7 +31,7 @@ vec3 pointLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir){
     vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoord));
 
     
-    vec3 lightDir = normalize(light.position - fragPos); 
+    vec3 lightDir = normalize(light.position - (light.isDirectional ? vec3(0) : fragPos)); 
     float diffuseValue = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = light.diffuse * diffuseValue * vec3(texture(material.diffuse, TexCoord));
 
