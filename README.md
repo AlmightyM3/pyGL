@@ -1,17 +1,17 @@
 # pyGL
-A project to learn opengl and gpu baced 3d renderind
+A project to learn OpenGL and GPU-based 3d rendering
  
 ToDo:
 - Shared shaders/models/textures between render nodes
-- Split lights into directinal and point uniform arrays (Maybe uniform buffers?)
+- Split lights into directional and point uniform arrays (Maybe uniform buffers?)
 - Expand test scene
-- Orthagrphic projection
+- Orthographic projection
 - Directional shadows
 - Point shadows
 - Sky box
 - Normal maps
 - Text rendering
-- Post prossesing
+- Post processing
 - Volumetric lighting
 - PBR?
 - Terrain?
