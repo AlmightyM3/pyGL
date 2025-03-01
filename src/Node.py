@@ -109,18 +109,14 @@ class Node:
         return None
 
 class RenderNode(Node):
-    def __init__(self, name="Unnamed RenderNode", meshPath="", diffusePath=f"{dirPath}/assets/blank.PNG", specularPath=f"{dirPath}/assets/blank.PNG"):
+    def __init__(self, mesh:Mesh,shader:Shader,diffuseTexture:Texture,specularTexture:Texture, name="Unnamed RenderNode"): #meshPath="", diffusePath=f"{dirPath}/assets/blank.PNG", specularPath=f"{dirPath}/assets/blank.PNG"
         super().__init__(name)
-        self.mesh = Mesh(meshPath)
+        self.mesh = mesh #Mesh(meshPath)
 
-        self.diffuseTexture = Texture(diffusePath, GL.GL_RGBA)
-        self.specularTexture = Texture(specularPath, GL.GL_RGBA)
+        self.diffuseTexture = diffuseTexture #Texture(diffusePath, GL.GL_RGBA)
+        self.specularTexture = specularTexture #Texture(specularPath, GL.GL_RGBA)
 
-        self.shader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
-        self.shader.use()
-        self.shader.setInt("material.diffuse", 0)
-        self.shader.setInt("material.specular", 1)
-        self.shader.setFloat("material.shininess", 32.0)
+        self.shader = shader #Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
     
     def render(self, camera, lights):
         self.shader.use()
@@ -137,6 +133,10 @@ class RenderNode(Node):
             self.shader.setVec3(f"lights[{i}].specular", Vector3(1.0))
             self.shader.setVec3(f"lights[{i}].position", lights[i].parent.worldMatrix.dot([*lights[i].transform.position,0]))
             self.shader.setFloat(f"lights[{i}].falloff", lights[i].falloff)
+        
+        self.shader.setInt("material.diffuse", 0)
+        self.shader.setInt("material.specular", 1)
+        self.shader.setFloat("material.shininess", 32.0)
 
         self.diffuseTexture.use(0)
         self.specularTexture.use(1)
@@ -145,8 +145,7 @@ class RenderNode(Node):
     
     def renderChildren(self, camera, lights):
         self.render(camera, lights)
-        for child in self.children:
-            child.renderChildren(camera, lights)
+        super().renderChildren(camera, lights)
     
     def inspectorUI(self, rootNode):
         super().inspectorUI(rootNode)
@@ -181,8 +180,7 @@ class LightNode(Node):
     
     def renderChildren(self, camera, lights):
         self.render(camera)
-        for child in self.children:
-            child.renderChildren(camera, lights)
+        super().renderChildren(camera, lights)
 
     def inspectorUI(self, rootNode):
         super().inspectorUI(rootNode)
@@ -200,39 +198,3 @@ class LightNode(Node):
         fChanged, fValue = imgui.input_float("Falloff", self.falloff)
         if fChanged:
             self.falloff = fValue
-
-# Depth and orthographic projection needs rework before use
-class UIPanelNode(Node):
-    def __init__(self, name="Unnamed UIPanelNode", color=Vector3(1), roundness=0.0, useWorldPos = False):
-        super().__init__(name)
-        self.mesh = Mesh("UI", False, useWorldPos)
-
-        self.color = color
-        self.roundness=roundness
-        self.useWorldPos = useWorldPos
-        if not self.useWorldPos:
-            self.transform.position += Vector3(0,0,-1)
-
-        self.shader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/uiPanel.frag")
-        self.shader.use()
-    
-    def render(self, camera):
-        self.shader.use()
-        
-        self.shader.setFloat("Roundness", self.roundness)
-        self.shader.setVec3("color", self.color)
-
-        if self.useWorldPos:
-            self.shader.setMat4("view", camera.matrix)
-            self.shader.setMat4("projection", camera.proj)
-        else:
-            self.shader.setMat4("view", numpy.eye(4))
-            self.shader.setMat4("projection", numpy.eye(4))
-        self.shader.setMat4("transform", self.worldMatrix)
-        
-        self.mesh.render()
-    
-    def renderChildren(self, camera, lights):
-        self.render(camera)
-        for child in self.children:
-            child.renderChildren(camera, lights)

@@ -3,7 +3,7 @@ from PIL import Image
 import numpy
 
 class Texture:
-    def __init__(self, imgPath, type):
+    def __init__(self, imgPath, type=GL.GL_RGBA):
         self.ID = GL.glGenTextures(1)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.ID)
         

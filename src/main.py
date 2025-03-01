@@ -9,7 +9,10 @@ import OpenGL.GLU as GLU
 from pygame import Vector3
 
 from Camera import Camera, FreeCamera
-from Node import Node, RenderNode, LightNode, UIPanelNode
+from Node import Node, RenderNode, LightNode
+from Mesh import Mesh
+from Shader import Shader
+from Texture import Texture
 
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "\\" in dirPath:
@@ -38,12 +41,24 @@ if __name__ == "__main__":
 
     lights: list[LightNode] = []
 
+    litShader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
+    
+    cubeMesh = Mesh("CUBE")
+    suzanneMesh = Mesh(f"{dirPath}/assets/Suzanne.obj")
+    testMesh = Mesh(f"{dirPath}/assets/test.obj")
+    teapotMesh = Mesh(f"{dirPath}/assets/teapot.obj")
+    
+    blankTex = Texture(f"{dirPath}/assets/blank.PNG")
+    UVTex = Texture(f"{dirPath}/assets/UV_Grid.jpg")
+    containerTex = Texture(f"{dirPath}/assets/container.PNG")
+    containerSpecularTex = Texture(f"{dirPath}/assets/container_specular.PNG")
+
     rootNode = Node("Root Node")
     inspectedNode:Node = rootNode
 
-    cubeNode1 = RenderNode(name="Suzanne", meshPath=f"{dirPath}/assets/Suzanne.obj")
-    cubeNode2 = RenderNode(name="Box 0", diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
-    cubeNode3 = RenderNode(name="Box 1", diffusePath=f"{dirPath}/assets/container.PNG", specularPath=f"{dirPath}/assets/container_specular.PNG")
+    cubeNode1 = RenderNode(suzanneMesh,litShader,blankTex,blankTex, "Suzanne")
+    cubeNode2 = RenderNode(cubeMesh,litShader,containerTex,containerSpecularTex, "Box 0")
+    cubeNode3 = RenderNode(cubeMesh,litShader,containerTex,containerSpecularTex, "Box 1")
     cubeNode1.transform.scale = Vector3(0.7)
     cubeNode1.setParent(rootNode)
     cubeNode2.transform.position = Vector3(4,0,0)
@@ -53,15 +68,15 @@ if __name__ == "__main__":
     cubeNode3.transform.scale = Vector3(0.5)
     cubeNode3.setParent(cubeNode2)
 
-    teapot = RenderNode(name="Utah Teapot", meshPath=f"{dirPath}/assets/teapot.obj")
+    teapot = RenderNode(teapotMesh,litShader,blankTex,blankTex, "Utah Teapot")
     teapot.transform.scale = Vector3(0.25)
     teapot.transform.position = Vector3(-4,0,-1)
     teapot.setParent(rootNode)
 
-    uvTest = RenderNode(name="uvTest", diffusePath=f"{dirPath}/assets/UV_Grid.jpg")
+    uvTest = RenderNode(cubeMesh,litShader,UVTex,blankTex, "uvTest")
     uvTest.transform.position = Vector3(5,0,0)
     uvTest.setParent(rootNode)
-    uvTestTri = RenderNode(name="uvTest", meshPath=f"{dirPath}/assets/test.obj", diffusePath=f"{dirPath}/assets/UV_Grid.jpg")
+    uvTestTri = RenderNode(testMesh,litShader,UVTex,blankTex, "uvTest")
     uvTestTri.transform.scale = Vector3(0.25)
     uvTestTri.transform.position = Vector3(0,1,0)
     uvTestTri.setParent(uvTest)
@@ -86,13 +101,13 @@ if __name__ == "__main__":
     io.display_size = WINDOW_SIZE
     
     while run:
-        pygame.display.set_caption(f"3D! | dt:{dt}, fps:{1000/dt}")
+        pygame.display.set_caption(f"3D! | dt: {dt}, fps: {clock.get_fps():.6}")
 
         camera.Update(dt)
 
         if shouldMakeCube:
             shouldMakeCube=False
-            cube = RenderNode(name="unnamed cube")
+            cube = RenderNode(cubeMesh,litShader,blankTex,blankTex)
             cube.setParent(rootNode)
 
         cubeNode1.transform.rotationAngle += 0.05 * dt
