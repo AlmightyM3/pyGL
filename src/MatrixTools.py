@@ -26,14 +26,14 @@ def scale(matrix, x, y, z):
 def rotateVec3(matrix, a, v):
     return rotate(matrix, a, v.x, v.y, v.z)
 
-def orthographic(fovy, aspect, znear, zfar):
-    h = math.tan(fovy / 360.0 * math.pi) * znear
+def orthographic(scale, aspect, znear, zfar):
+    h = scale
     w = h * aspect
     
     return numpy.array(
         [
-            [1/(-w), 0, 0, 0],
-            [0, 1/(-h), 0, 0],
+            [1/(w), 0, 0, 0],
+            [0, 1/(h), 0, 0],
             [0, 0, -2/(zfar-znear), 0],
             [0, 0, 0, 1],
         ],

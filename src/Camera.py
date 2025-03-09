@@ -5,12 +5,12 @@ import math
 from MatrixTools import *
 
 class Camera:
-    def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), fov=45):
+    def __init__(self, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0)):
         self.position = startPos
         self.front = startFront
         self.worldUp = startUp
         self.matrix = self.genMatrix(self.position+self.front)
-        self.proj = perspective(fov, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
+        self.proj = numpy.eye(4)
     
     def Update(self, dt):
         self.matrix = self.genMatrix(self.position+self.front)
@@ -31,7 +31,17 @@ class Camera:
             [0.0, 0.0, 0.0, 1.0]
         ], numpy.float32)).T
 
-class FreeCamera(Camera):
+class orthographicCamera(Camera):
+    def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), scale=5):
+        super().__init__(startPos, startFront, startUp)
+        self.proj = orthographic(scale, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
+
+class perspectiveCamera(Camera):
+    def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), fov=45):
+        super().__init__(startPos, startFront, startUp)
+        self.proj = perspective(fov, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
+
+class FreeCamera(perspectiveCamera):
     def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), fov=45, speed = 2.75, sensitivity = 0.1):
         super().__init__(WINDOW_SIZE, startPos, startFront, startUp, fov)
         
