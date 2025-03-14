@@ -126,13 +126,21 @@ class RenderNode(Node):
         self.shader.setMat4("projection", camera.proj)
         self.shader.setMat4("transform", self.worldMatrix)
 
-        for i in range(len(lights)):
-            self.shader.setBool(f"lights[{i}].isDirectional", lights[i].isDirectional)
-            self.shader.setVec3(f"lights[{i}].ambient", lights[i].color*0.2)
-            self.shader.setVec3(f"lights[{i}].diffuse", lights[i].color*0.5)
-            self.shader.setVec3(f"lights[{i}].specular", Vector3(1.0))
-            self.shader.setVec3(f"lights[{i}].position", lights[i].parent.worldMatrix.dot([*lights[i].transform.position,0]))
-            self.shader.setFloat(f"lights[{i}].falloff", lights[i].falloff)
+        numPoint,numDirectional = 0,0
+        for light in lights:
+            if light.isDirectional:
+                self.shader.setVec3(f"directionalLights[{numDirectional}].ambient", light.color*0.2)
+                self.shader.setVec3(f"directionalLights[{numDirectional}].diffuse", light.color*0.5)
+                self.shader.setVec3(f"directionalLights[{numDirectional}].specular", Vector3(1.0))
+                self.shader.setVec3(f"directionalLights[{numDirectional}].direction", Vector3(*light.parent.worldMatrix.dot([*light.transform.position,0])[:3]).normalize())
+                numDirectional+=1
+            else:
+                self.shader.setVec3(f"pointLights[{numPoint}].ambient", light.color*0.2)
+                self.shader.setVec3(f"pointLights[{numPoint}].diffuse", light.color*0.5)
+                self.shader.setVec3(f"pointLights[{numPoint}].specular", Vector3(1.0))
+                self.shader.setVec3(f"pointLights[{numPoint}].position", light.parent.worldMatrix.dot([*light.transform.position,0]))
+                self.shader.setFloat(f"pointLights[{numPoint}].falloff", light.falloff)
+                numPoint+=1
         
         self.shader.setInt("material.diffuse", 0)
         self.shader.setInt("material.specular", 1)
@@ -160,7 +168,7 @@ class LightNode(Node):
 
         self.transform.scale = Vector3(0.2)
         self.color = color
-        self.falloff = falloff*(1-isDirectional)
+        self.falloff = falloff
         self.isDirectional = isDirectional
 
         self.shader = Shader(f"{dirPath}/src/shaders/light.vert", f"{dirPath}/src/shaders/light.frag")
@@ -189,7 +197,6 @@ class LightNode(Node):
         dChanged, dValue = imgui.checkbox("Is Directional",self.isDirectional)
         if dChanged:
             self.isDirectional = dValue
-            self.falloff *= (1-self.isDirectional)
         
         cChanged, cValues = imgui.color_edit3("Color",*self.color)
         if cChanged:
