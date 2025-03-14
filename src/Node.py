@@ -6,6 +6,7 @@ from Transform import Transform
 from Mesh import Mesh
 from Shader import Shader
 from Texture import Texture
+from MatrixTools import orthographic,view
 
 import os
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -170,10 +171,18 @@ class LightNode(Node):
         self.color = color
         self.falloff = falloff
         self.isDirectional = isDirectional
+        self.calcLightSpaceMatrix()
 
         self.shader = Shader(f"{dirPath}/src/shaders/light.vert", f"{dirPath}/src/shaders/light.frag")
 
         lights.append(self)
+
+    def calcLightSpaceMatrix(self):
+        self.lightSpaceMatrix = orthographic(10,1,0.1,50).dot(view(self.transform.position,Vector3(0 if self.transform.position!=Vector3(0) else 1),Vector3(0,1,0))).T
+
+    def updateWorldMatrix(self):
+        super().updateWorldMatrix()
+        self.calcLightSpaceMatrix()
     
     def render(self, camera):
         self.shader.use()

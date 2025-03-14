@@ -16,20 +16,7 @@ class Camera:
         self.matrix = self.genMatrix(self.position+self.front)
     
     def genMatrix(self, target):
-        cameraDirection = (self.position - target).normalize()
-        cameraRight = self.worldUp.cross(cameraDirection).normalize()
-        cameraUp = cameraDirection.cross(cameraRight).normalize()
-        return numpy.array([
-            [cameraRight.x, cameraRight.y, cameraRight.z, 0.0],
-            [cameraUp.x,cameraUp.y,cameraUp.z, 0.0],
-            [cameraDirection.x,cameraDirection.y,cameraDirection.z, 0.0],
-            [0.0, 0.0, 0.0, 1.0]
-        ], numpy.float32).dot(numpy.array([
-            [1.0, 0.0, 0.0, -self.position.x],
-            [0.0, 1.0, 0.0, -self.position.y],
-            [0.0, 0.0, 1.0, -self.position.z],
-            [0.0, 0.0, 0.0, 1.0]
-        ], numpy.float32)).T
+        return view(self.position, target, self.worldUp)
 
 class orthographicCamera(Camera):
     def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), scale=5):
