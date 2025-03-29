@@ -34,7 +34,7 @@ def orthographic(scale, aspect, znear, zfar):
         [
             [1/(w), 0, 0, 0],
             [0, 1/(h), 0, 0],
-            [0, 0, -2/(zfar-znear), 0],
+            [0, 0, -2/(zfar-znear), -(zfar+znear)/(zfar-znear)],
             [0, 0, 0, 1],
         ],
         dtype=numpy.float32,

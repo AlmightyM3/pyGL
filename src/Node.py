@@ -48,6 +48,10 @@ class Node:
     def renderChildren(self, camera, lights):
         for child in self.children:
             child.renderChildren(camera, lights)
+
+    def renderChildrenWithShader(self, shader):
+        for child in self.children:
+            child.renderChildrenWithShader(shader)
     
     def treeUI(self):
         clicked = None
@@ -130,10 +134,14 @@ class RenderNode(Node):
         numPoint,numDirectional = 0,0
         for light in lights:
             if light.isDirectional:
+                GL.glActiveTexture(GL.GL_TEXTURE0+2)
+                GL.glBindTexture(GL.GL_TEXTURE_2D, light.depthMap)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].ambient", light.color*0.2)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].diffuse", light.color*0.5)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].specular", Vector3(1.0))
                 self.shader.setVec3(f"directionalLights[{numDirectional}].direction", Vector3(*light.parent.worldMatrix.dot([*light.transform.position,0])[:3]).normalize())
+                self.shader.setMat4(f"directionalLights[{numDirectional}].lightSpaceMatrix", light.lightSpaceMatrix)
+                self.shader.setInt(f"directionalLights[{numDirectional}].shadowMap", 2)
                 numDirectional+=1
             else:
                 self.shader.setVec3(f"pointLights[{numPoint}].ambient", light.color*0.2)
@@ -155,6 +163,16 @@ class RenderNode(Node):
     def renderChildren(self, camera, lights):
         self.render(camera, lights)
         super().renderChildren(camera, lights)
+
+    def renderWithShader(self, shader):
+        shader.use()
+        shader.setMat4("transform", self.worldMatrix)
+
+        self.mesh.render()
+    
+    def renderChildrenWithShader(self, shader):
+        self.renderWithShader(shader)
+        super().renderChildrenWithShader(shader)
     
     def inspectorUI(self, rootNode):
         super().inspectorUI(rootNode)
@@ -177,8 +195,17 @@ class LightNode(Node):
 
         lights.append(self)
 
+        self.depthMap = GL.glGenTextures(1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.depthMap)
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_DEPTH_COMPONENT, 1024, 1024, 0, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT, None)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_BORDER)
+        GL.glTexParameterfv(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_BORDER_COLOR, [1.0,1.0,1.0,1.0])
+
     def calcLightSpaceMatrix(self):
-        self.lightSpaceMatrix = orthographic(10,1,0.1,50).dot(view(self.transform.position,Vector3(0 if self.transform.position!=Vector3(0) else 1),Vector3(0,1,0))).T
+        self.lightSpaceMatrix = orthographic(5,1,0,15).dot(view(self.transform.position,Vector3(0 if self.transform.position!=Vector3(0) else 1),Vector3(0,1,0)).T).T
 
     def updateWorldMatrix(self):
         super().updateWorldMatrix()
@@ -198,6 +225,24 @@ class LightNode(Node):
     def renderChildren(self, camera, lights):
         self.render(camera)
         super().renderChildren(camera, lights)
+    
+    def renderDepthMap(self, depthMapFBO, depthShader, rootNode):
+        GL.glViewport(0, 0, 1024, 1024)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, depthMapFBO)
+        GL.glFramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, GL.GL_TEXTURE_2D, self.depthMap, 0)
+
+        GL.glDrawBuffer(GL.GL_NONE)
+        GL.glReadBuffer(GL.GL_NONE)
+
+        # GL.glCullFace(GL.GL_FRONT)
+
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
+        depthShader.use()
+        depthShader.setMat4("lightSpaceMatrix", self.lightSpaceMatrix)
+        
+        rootNode.renderChildrenWithShader(depthShader)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+        # GL.glCullFace(GL.GL_BACK)
 
     def inspectorUI(self, rootNode):
         super().inspectorUI(rootNode)

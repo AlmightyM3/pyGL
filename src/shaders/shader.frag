@@ -27,6 +27,9 @@ struct DirectionalLight {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+
+    mat4 lightSpaceMatrix;
+    sampler2D shadowMap;
 };
 #define NUM_DIRECTIONAL_LIGHTS 1
 uniform DirectionalLight[NUM_DIRECTIONAL_LIGHTS] directionalLights; 
@@ -63,7 +66,32 @@ vec3 directionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 vi
     float specularValue = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = light.specular * specularValue * vec3(texture(material.specular, TexCoord));  
 
-    return ambient + diffuse + specular;
+
+    vec4 posLightSpace = light.lightSpaceMatrix * vec4(fragPos, 1.0);
+    vec3 projPosLightSpace = posLightSpace.xyz / posLightSpace.w  * 0.5 + 0.5;
+
+    float bias = max(0.01 * (1.0 - dot(normal, light.direction)), 0.0005); 
+
+    float currentDepth = projPosLightSpace.z;  
+
+    // float closestDepth = texture(light.shadowMap, projPosLightSpace.xy).r;  
+    // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0; 
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(light.shadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(light.shadowMap, projPosLightSpace.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
+
+    if(projPosLightSpace.z > 1.0)  shadow = 0.0;
+    //return texture(light.shadowMap, TexCoord).xyz;// projPosLightSpace;//vec3(currentDepth);//projPosLightSpace;//texture(light.shadowMap, TexCoord).xyz;
+
+    return ambient + (1.0 - shadow) * (diffuse + specular);
 }
 
 void main()

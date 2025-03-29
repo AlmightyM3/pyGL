@@ -111,11 +111,18 @@ if __name__ == "__main__":
     light0=LightNode(lights, name="Light 0")
     light1=LightNode(lights, name="Light 1", isDirectional=True)
     light0.transform.position = Vector3(1.2,1.0,2.0)
-    light1.transform.position = Vector3(-3,5,-8)
+    light1.transform.position = Vector3(-3,5,-8)/2
     light0.setParent(rootNode)
     light1.setParent(rootNode)
 
     camera = FreeCamera(WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 3.0))
+
+    depthMapFBO = GL.glGenFramebuffers(1)
+    GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, depthMapFBO)
+    GL.glDrawBuffer(GL.GL_NONE)
+    GL.glReadBuffer(GL.GL_NONE)
+    GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+    depthShader = Shader(f"{dirPath}/src/shaders/shadowDepth.vert", f"{dirPath}/src/shaders/shadowDepth.frag")
 
     shouldMakeCube = False
 
@@ -143,6 +150,11 @@ if __name__ == "__main__":
 
         rootNode.updateWorldMatrix()
         
+        for light in lights:
+            if light.isDirectional:
+                light.renderDepthMap(depthMapFBO,depthShader,rootNode)
+        
+        GL.glViewport(0, 0, WINDOW_SIZE[0], WINDOW_SIZE[1])
         GL.glClearColor(0.1, 0.1, 0.1, 1.0)#0.2, 0.3, 0.3, 1.0
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         
