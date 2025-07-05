@@ -26,7 +26,7 @@ class orthographicCamera(Camera):
 class perspectiveCamera(Camera):
     def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), fov=45):
         super().__init__(startPos, startFront, startUp)
-        self.proj = perspective(fov, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.1, 100)
+        self.proj = perspective(fov, WINDOW_SIZE[0]/WINDOW_SIZE[1], 0.01, 100)
 
 class FreeCamera(perspectiveCamera):
     def __init__(self,WINDOW_SIZE, startPos=Vector3(0.0, 0.0, 0.0), startFront=Vector3(0.0, 0.0,-1.0), startUp = Vector3(0.0, 1.0,  0.0), fov=45, speed = 2.75, sensitivity = 0.1):

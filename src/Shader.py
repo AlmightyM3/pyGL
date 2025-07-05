@@ -2,30 +2,17 @@ import OpenGL.GL as GL
 import numpy
 
 class Shader:  
-    def __init__(self, vertexPath, fragmentPath):
-        with open(vertexPath, 'r') as file:
-            vertexShaderSource = file.read()
+    def __init__(self, vertexPath="", fragmentPath="", geometryPath=""):
         
-        vertexShader = GL.glCreateShader(GL.GL_VERTEX_SHADER)
-        GL.glShaderSource(vertexShader, vertexShaderSource)
-        GL.glCompileShader(vertexShader)
-
-        log = GL.glGetShaderInfoLog(vertexShader)
-        self._printDebugLog(log)
-
-        with open(fragmentPath, 'r') as file:
-            fragmentShaderSource = file.read()
-        
-        fragmentShader = GL.glCreateShader(GL.GL_FRAGMENT_SHADER)
-        GL.glShaderSource(fragmentShader, fragmentShaderSource)
-        GL.glCompileShader(fragmentShader)
-        
-        log = GL.glGetShaderInfoLog(fragmentShader)
-        self._printDebugLog(log)
+        vertexShader = self._compileShaderFromFile(vertexPath, GL.GL_VERTEX_SHADER)
+        fragmentShader = self._compileShaderFromFile(fragmentPath, GL.GL_FRAGMENT_SHADER)
+        geometryShader = self._compileShaderFromFile(geometryPath, GL.GL_GEOMETRY_SHADER)
 
         self.ID = GL.glCreateProgram()
         GL.glAttachShader(self.ID, vertexShader)
         GL.glAttachShader(self.ID, fragmentShader)
+        if geometryShader:
+            GL.glAttachShader(self.ID, geometryShader)
         GL.glLinkProgram(self.ID)
 
         log = GL.glGetProgramInfoLog(self.ID)
@@ -33,6 +20,8 @@ class Shader:
         
         GL.glDeleteShader(vertexShader)
         GL.glDeleteShader(fragmentShader)
+        if geometryShader:
+            GL.glDeleteShader(geometryShader)
 
     def _printDebugLog(self, log):
         if isinstance(log, bytes):
@@ -42,6 +31,21 @@ class Shader:
                 continue
             print(line)
     
+    def _compileShader(self, shaderSource, type):
+        shader = GL.glCreateShader(type)
+        GL.glShaderSource(shader, shaderSource)
+        GL.glCompileShader(shader)
+
+        log = GL.glGetShaderInfoLog(shader)
+        self._printDebugLog(log)
+        return shader
+
+    def _compileShaderFromFile(self, path, type):
+        if path != "":
+            with open(path, 'r') as file:
+                shaderSource = file.read()
+            return self._compileShader(shaderSource, type)
+            
     def use(self):
         GL.glUseProgram(self.ID)
     
