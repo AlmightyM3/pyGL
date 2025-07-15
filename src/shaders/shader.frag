@@ -17,6 +17,9 @@ struct PointLight {
     vec3 specular;
 
     float falloff;
+
+    samplerCube shadowMap;
+    float farPlane;
 };
 #define NUM_POINT_LIGHTS 1
 uniform PointLight[NUM_POINT_LIGHTS] pointLights; 
@@ -53,7 +56,29 @@ vec3 pointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir){
     float distance    = length(light.position - FragPos);
     float attenuation = 1.0 / (1 + light.falloff*(distance * distance)); 
 
-    return (ambient + diffuse + specular) * attenuation;
+    vec3 posLightSpace = fragPos - light.position; 
+    float currentDepth = length(posLightSpace); 
+
+    float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.0005); 
+
+    float shadow  = 0.0;
+    float samples = 3.0;
+    float offset  = 0.012;
+    for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+    {
+        for(float y = -offset; y < offset; y += offset / (samples * 0.5))
+        {
+            for(float z = -offset; z < offset; z += offset / (samples * 0.5))
+            {
+                float closestDepth = texture(light.shadowMap, posLightSpace + vec3(x, y, z)).r * light.farPlane; 
+                if(currentDepth - bias > closestDepth)
+                    shadow += 1.0;
+            }
+        }
+    }
+    shadow /= (samples * samples * samples);
+
+    return (ambient + (1.0 - shadow) * (diffuse + specular)) * attenuation;
 }
 
 vec3 directionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 viewDir){
@@ -74,8 +99,6 @@ vec3 directionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 vi
 
     float currentDepth = projPosLightSpace.z;  
 
-    // float closestDepth = texture(light.shadowMap, projPosLightSpace.xy).r;  
-    // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0; 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(light.shadowMap, 0);
     for(int x = -1; x <= 1; ++x)
@@ -89,7 +112,6 @@ vec3 directionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 vi
     shadow /= 9.0;
 
     if(projPosLightSpace.z > 1.0)  shadow = 0.0;
-    //return texture(light.shadowMap, TexCoord).xyz;// projPosLightSpace;//vec3(currentDepth);//projPosLightSpace;//texture(light.shadowMap, TexCoord).xyz;
 
     return ambient + (1.0 - shadow) * (diffuse + specular);
 }

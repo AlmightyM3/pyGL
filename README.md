@@ -3,7 +3,6 @@ A project to learn OpenGL and GPU-based 3d rendering with help from learnopengl.
  
 # ToDo:
 - Abstract ImGui
-- Point shadows
 - Sky box
 - Normal maps
 

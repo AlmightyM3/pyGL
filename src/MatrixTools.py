@@ -1,4 +1,5 @@
 import numpy
+from pygame import Vector3
 import math
 
 def translateVec3(matrix, v):

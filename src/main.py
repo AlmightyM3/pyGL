@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import os
 from imgui.integrations.pygame import PygameRenderer
 import pygame
-import imgui
+import imgui # On lines 3 and 12 of imgui\integrations\pygame.py change FixedPipelineRenderer to ProgrammablePipelineRenderer
 import OpenGL.GL as GL
 import OpenGL.GLU as GLU
 
@@ -30,17 +30,17 @@ def makeImGUIHappy():
 if __name__ == "__main__":
     # Make a openGL compatable window
     pygame.init()
+    pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, 4)
+    pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, 1)
+
     window = pygame.display.set_mode(WINDOW_SIZE,  pygame.OPENGL | pygame.DOUBLEBUF)
     clock = pygame.time.Clock()
     dt = 1.0
     run = True
     
-    pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, 3)
-    pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, 4)
     print(f"OpenGL version {pygame.display.gl_get_attribute(pygame.GL_CONTEXT_MAJOR_VERSION)}.{pygame.display.gl_get_attribute(pygame.GL_CONTEXT_MINOR_VERSION)}")
 
     lights: list[LightNode] = []
-
     litShader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
     
     cubeMesh = Mesh("CUBE")
@@ -122,7 +122,9 @@ if __name__ == "__main__":
     GL.glDrawBuffer(GL.GL_NONE)
     GL.glReadBuffer(GL.GL_NONE)
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
-    depthShader = Shader(f"{dirPath}/src/shaders/shadowDepth.vert", f"{dirPath}/src/shaders/shadowDepth.frag")
+
+    directionalDepthShader = Shader(f"{dirPath}/src/shaders/shadowDepthDirectional.vert", f"{dirPath}/src/shaders/shadowDepthDirectional.frag")
+    pointDepthShader = Shader(f"{dirPath}/src/shaders/shadowDepthPoint.vert", f"{dirPath}/src/shaders/shadowDepthPoint.frag", f"{dirPath}/src/shaders/shadowDepthPoint.geom")
 
     shouldMakeCube = False
 
@@ -151,8 +153,7 @@ if __name__ == "__main__":
         rootNode.updateWorldMatrix()
         
         for light in lights:
-            if light.isDirectional:
-                light.renderDepthMap(depthMapFBO,depthShader,rootNode)
+            light.renderDepthMap(depthMapFBO,directionalDepthShader if light.isDirectional else pointDepthShader,rootNode)
         
         GL.glViewport(0, 0, WINDOW_SIZE[0], WINDOW_SIZE[1])
         GL.glClearColor(0.1, 0.1, 0.1, 1.0)#0.2, 0.3, 0.3, 1.0

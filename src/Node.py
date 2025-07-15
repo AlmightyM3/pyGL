@@ -6,7 +6,7 @@ from Transform import Transform
 from Mesh import Mesh
 from Shader import Shader
 from Texture import Texture
-from MatrixTools import orthographic,view
+from MatrixTools import orthographic,perspective,view
 
 import os
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -133,22 +133,27 @@ class RenderNode(Node):
 
         numPoint,numDirectional = 0,0
         for light in lights:
+            lightNum = numDirectional+numPoint
+
+            GL.glActiveTexture(GL.GL_TEXTURE2+lightNum)
             if light.isDirectional:
-                GL.glActiveTexture(GL.GL_TEXTURE0+2)
                 GL.glBindTexture(GL.GL_TEXTURE_2D, light.depthMap)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].ambient", light.color*0.2)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].diffuse", light.color*0.5)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].specular", Vector3(1.0))
                 self.shader.setVec3(f"directionalLights[{numDirectional}].direction", Vector3(*light.parent.worldMatrix.dot([*light.transform.position,0])[:3]).normalize())
                 self.shader.setMat4(f"directionalLights[{numDirectional}].lightSpaceMatrix", light.lightSpaceMatrix)
-                self.shader.setInt(f"directionalLights[{numDirectional}].shadowMap", 2)
+                self.shader.setInt(f"directionalLights[{numDirectional}].shadowMap", 2+lightNum)
                 numDirectional+=1
             else:
+                GL.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, light.depthMap)
                 self.shader.setVec3(f"pointLights[{numPoint}].ambient", light.color*0.2)
                 self.shader.setVec3(f"pointLights[{numPoint}].diffuse", light.color*0.5)
                 self.shader.setVec3(f"pointLights[{numPoint}].specular", Vector3(1.0))
                 self.shader.setVec3(f"pointLights[{numPoint}].position", light.parent.worldMatrix.dot([*light.transform.position,0]))
                 self.shader.setFloat(f"pointLights[{numPoint}].falloff", light.falloff)
+                self.shader.setFloat(f"pointLights[{numPoint}].farPlane", 15)
+                self.shader.setInt(f"pointLights[{numPoint}].shadowMap", 2+lightNum)
                 numPoint+=1
         
         self.shader.setInt("material.diffuse", 0)
@@ -196,16 +201,41 @@ class LightNode(Node):
         lights.append(self)
 
         self.depthMap = GL.glGenTextures(1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.depthMap)
-        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_DEPTH_COMPONENT, 1024, 1024, 0, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT, None)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_BORDER)
-        GL.glTexParameterfv(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_BORDER_COLOR, [1.0,1.0,1.0,1.0])
+        if self.isDirectional:
+            GL.glBindTexture(GL.GL_TEXTURE_2D, self.depthMap)
+            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_DEPTH_COMPONENT, 1024, 1024, 0, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT, None)
+            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_BORDER)
+            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_BORDER)
+            GL.glTexParameterfv(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_BORDER_COLOR, [1.0,1.0,1.0,1.0])
+        else:
+            GL.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, self.depthMap)
+            for i in range(6):
+                GL.glTexImage2D(GL.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL.GL_DEPTH_COMPONENT, 1024, 1024, 0, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT, None)
+            GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+            GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+            GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
+            GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
+            GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_WRAP_R, GL.GL_CLAMP_TO_EDGE)
 
     def calcLightSpaceMatrix(self):
-        self.lightSpaceMatrix = orthographic(5,1,0,15).dot(view(self.transform.position,Vector3(0 if self.transform.position!=Vector3(0) else 1),Vector3(0,1,0)).T).T
+        try:
+            if self.isDirectional:
+                self.lightSpaceMatrix = orthographic(5,1,0,15).dot(view(self.transform.position,Vector3(0 if self.transform.position!=Vector3(0) else 1),Vector3(0,1,0)).T).T
+            else:
+                shadowProj = perspective(90, 1, 1, 15) # znear must be 1
+                self.lightSpaceMatrix = [
+                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(1,0,0),Vector3(0,-1,0)).T).T,
+                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(-1,0,0),Vector3(0,-1,0)).T).T,
+                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(0,1,0),Vector3(0,0,1)).T).T,
+                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(0,-1,0),Vector3(0,0,-1)).T).T,
+                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(0,0,1),Vector3(0,-1,0)).T).T,
+                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(0,0,-1),Vector3(0,-1,0)).T).T,
+                ]
+        except(AttributeError):
+            self.lightSpaceMatrix = numpy.eye(4)
+            
 
     def updateWorldMatrix(self):
         super().updateWorldMatrix()
@@ -229,7 +259,11 @@ class LightNode(Node):
     def renderDepthMap(self, depthMapFBO, depthShader, rootNode):
         GL.glViewport(0, 0, 1024, 1024)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, depthMapFBO)
-        GL.glFramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, GL.GL_TEXTURE_2D, self.depthMap, 0)
+        
+        if self.isDirectional:
+            GL.glFramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, GL.GL_TEXTURE_2D, self.depthMap, 0)
+        else:
+            GL.glFramebufferTexture(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, self.depthMap, 0)
 
         GL.glDrawBuffer(GL.GL_NONE)
         GL.glReadBuffer(GL.GL_NONE)
@@ -238,7 +272,13 @@ class LightNode(Node):
 
         GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
         depthShader.use()
-        depthShader.setMat4("lightSpaceMatrix", self.lightSpaceMatrix)
+        if self.isDirectional:
+            depthShader.setMat4("lightSpaceMatrix", self.lightSpaceMatrix)
+        else:
+            depthShader.setVec3("lightPos", self.transform.position)
+            depthShader.setFloat("farPlane", 15)
+            for i in range(6):
+                depthShader.setMat4(f"shadowMatrices[{i}]", self.lightSpaceMatrix[i])
         
         rootNode.renderChildrenWithShader(depthShader)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
