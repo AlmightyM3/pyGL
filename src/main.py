@@ -13,6 +13,7 @@ from Node import Node, RenderNode, LightNode
 from Mesh import Mesh
 from Shader import Shader
 from Texture import Texture
+from Skybox import Skybox
 
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "\\" in dirPath:
@@ -39,6 +40,9 @@ if __name__ == "__main__":
     run = True
     
     print(f"OpenGL version {pygame.display.gl_get_attribute(pygame.GL_CONTEXT_MAJOR_VERSION)}.{pygame.display.gl_get_attribute(pygame.GL_CONTEXT_MINOR_VERSION)}")
+
+    skyboxShader = Shader(f"{dirPath}/src/shaders/skybox.vert", f"{dirPath}/src/shaders/skybox.frag")
+    skybox = Skybox(f"{dirPath}/assets/skybox/",skyboxShader)
 
     lights: list[LightNode] = []
     litShader = Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
@@ -111,7 +115,7 @@ if __name__ == "__main__":
     light0=LightNode(lights, name="Light 0")
     light1=LightNode(lights, name="Light 1", isDirectional=True)
     light0.transform.position = Vector3(1.2,1.0,2.0)
-    light1.transform.position = Vector3(-3,5,-8)/2
+    light1.transform.position = Vector3(-1.5,2.5,-4)
     light0.setParent(rootNode)
     light1.setParent(rootNode)
 
@@ -160,6 +164,8 @@ if __name__ == "__main__":
         GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         
         rootNode.renderChildren(camera, lights)
+
+        skybox.render(camera)
 
         makeImGUIHappy()
 
