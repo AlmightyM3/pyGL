@@ -17,7 +17,7 @@ from ImguiUI import GUI
 dirPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if "\\" in dirPath:
     dirPath = dirPath.replace("\\", "/")
-WINDOW_SIZE = (1200,900)
+WINDOW_SIZE = (1000,750)
 
 if __name__ == "__main__":
     # Make a openGL compatable window
@@ -152,7 +152,7 @@ if __name__ == "__main__":
         gui.draw(rootNode)
 
         pygame.display.flip()
-        dt = clock.tick(500)
+        dt = clock.tick()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
