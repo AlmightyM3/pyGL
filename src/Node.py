@@ -37,10 +37,12 @@ class Node:
         if self.transform.changed:
             self.transform.updateLocalMatrix()
         
-        if not self.parent == None:
-            self.worldMatrix = numpy.dot(self.transform.localMatrix, self.parent.worldMatrix)
-        else:
+        if self.parent == None:
             self.worldMatrix = self.transform.localMatrix
+        else:
+            self.worldMatrix = numpy.dot(self.transform.localMatrix, self.parent.worldMatrix)
+
+        self.worldPosition = Vector3(*self.worldMatrix.T.dot([0,0,0,1])[:3])
 
         for child in self.children:
             child.updateWorldMatrix()
@@ -141,7 +143,7 @@ class RenderNode(Node):
                 self.shader.setVec3(f"directionalLights[{numDirectional}].ambient", light.color*0.2)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].diffuse", light.color*0.5)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].specular", Vector3(1.0))
-                self.shader.setVec3(f"directionalLights[{numDirectional}].direction", Vector3(*light.parent.worldMatrix.dot([*light.transform.position,0])[:3]).normalize())
+                self.shader.setVec3(f"directionalLights[{numDirectional}].direction", light.worldPosition)
                 self.shader.setMat4(f"directionalLights[{numDirectional}].lightSpaceMatrix", light.lightSpaceMatrix)
                 self.shader.setInt(f"directionalLights[{numDirectional}].shadowMap", 2+lightNum)
                 numDirectional+=1
@@ -150,7 +152,7 @@ class RenderNode(Node):
                 self.shader.setVec3(f"pointLights[{numPoint}].ambient", light.color*0.2)
                 self.shader.setVec3(f"pointLights[{numPoint}].diffuse", light.color*0.5)
                 self.shader.setVec3(f"pointLights[{numPoint}].specular", Vector3(1.0))
-                self.shader.setVec3(f"pointLights[{numPoint}].position", light.parent.worldMatrix.dot([*light.transform.position,0]))
+                self.shader.setVec3(f"pointLights[{numPoint}].position", light.worldPosition)
                 self.shader.setFloat(f"pointLights[{numPoint}].falloff", light.falloff)
                 self.shader.setFloat(f"pointLights[{numPoint}].farPlane", 15)
                 self.shader.setInt(f"pointLights[{numPoint}].shadowMap", 2+lightNum)
@@ -222,16 +224,16 @@ class LightNode(Node):
     def calcLightSpaceMatrix(self):
         try:
             if self.isDirectional:
-                self.lightSpaceMatrix = orthographic(5,1,0,15).dot(view(self.transform.position,Vector3(0 if self.transform.position!=Vector3(0) else 1),Vector3(0,1,0)).T).T
+                self.lightSpaceMatrix = orthographic(5,1,0,15).dot(view(self.worldPosition,Vector3(0 if self.worldPosition!=Vector3(0) else 1),Vector3(0,1,0)).T).T
             else:
                 shadowProj = perspective(90, 1, 1, 15) # znear must be 1
                 self.lightSpaceMatrix = [
-                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(1,0,0),Vector3(0,-1,0)).T).T,
-                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(-1,0,0),Vector3(0,-1,0)).T).T,
-                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(0,1,0),Vector3(0,0,1)).T).T,
-                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(0,-1,0),Vector3(0,0,-1)).T).T,
-                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(0,0,1),Vector3(0,-1,0)).T).T,
-                    shadowProj.dot(view(self.transform.position,self.transform.position+Vector3(0,0,-1),Vector3(0,-1,0)).T).T,
+                    shadowProj.dot(view(self.worldPosition,self.worldPosition+Vector3(1,0,0),Vector3(0,-1,0)).T).T,
+                    shadowProj.dot(view(self.worldPosition,self.worldPosition+Vector3(-1,0,0),Vector3(0,-1,0)).T).T,
+                    shadowProj.dot(view(self.worldPosition,self.worldPosition+Vector3(0,1,0),Vector3(0,0,1)).T).T,
+                    shadowProj.dot(view(self.worldPosition,self.worldPosition+Vector3(0,-1,0),Vector3(0,0,-1)).T).T,
+                    shadowProj.dot(view(self.worldPosition,self.worldPosition+Vector3(0,0,1),Vector3(0,-1,0)).T).T,
+                    shadowProj.dot(view(self.worldPosition,self.worldPosition+Vector3(0,0,-1),Vector3(0,-1,0)).T).T,
                 ]
         except(AttributeError):
             self.lightSpaceMatrix = numpy.eye(4)
@@ -275,7 +277,7 @@ class LightNode(Node):
         if self.isDirectional:
             depthShader.setMat4("lightSpaceMatrix", self.lightSpaceMatrix)
         else:
-            depthShader.setVec3("lightPos", self.transform.position)
+            depthShader.setVec3("lightPos", self.worldPosition)
             depthShader.setFloat("farPlane", 15)
             for i in range(6):
                 depthShader.setMat4(f"shadowMatrices[{i}]", self.lightSpaceMatrix[i])
