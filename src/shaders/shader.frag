@@ -42,6 +42,15 @@ in vec2 TexCoord;
 in vec3 FragPos; 
 in vec3 Normal; 
 
+vec3 sampleOffsetDirections[20] = vec3[]
+(
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+);  
+
 vec3 pointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir){
     vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoord));
     
@@ -53,7 +62,7 @@ vec3 pointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir){
     float specularValue = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = light.specular * specularValue * vec3(texture(material.specular, TexCoord));  
 
-    float distance    = length(light.position - FragPos);
+    float distance = length(light.position - FragPos);
     float attenuation = 1.0 / (1 + light.falloff*(distance * distance)); 
 
     vec3 posLightSpace = fragPos - light.position; 
@@ -61,22 +70,22 @@ vec3 pointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir){
 
     float bias = max(0.01 * (1.0 - dot(normal, lightDir)), 0.0005); 
 
-    float shadow  = 0.0;
-    float samples = 3.0;
-    float offset  = 0.012;
-    for(float x = -offset; x < offset; x += offset / (samples * 0.5))
+    //return vec3(currentDepth/light.farPlane); 
+    // return texture(light.shadowMap, posLightSpace).rgb; 
+
+    float closestDepth = texture(light.shadowMap, posLightSpace).r * light.farPlane; 
+    // float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    float shadow = 0.0;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / light.farPlane)) / 25.0; 
+    for(int i = 0; i < 20; ++i)
     {
-        for(float y = -offset; y < offset; y += offset / (samples * 0.5))
-        {
-            for(float z = -offset; z < offset; z += offset / (samples * 0.5))
-            {
-                float closestDepth = texture(light.shadowMap, posLightSpace + vec3(x, y, z)).r * light.farPlane; 
-                if(currentDepth - bias > closestDepth)
-                    shadow += 1.0;
-            }
-        }
+        float closestDepth = texture(light.shadowMap, posLightSpace + sampleOffsetDirections[i] * diskRadius).r;
+        closestDepth *= light.farPlane;   // undo mapping [0;1]
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
     }
-    shadow /= (samples * samples * samples);
+    shadow /= 20.;  
 
     return (ambient + (1.0 - shadow) * (diffuse + specular)) * attenuation;
 }

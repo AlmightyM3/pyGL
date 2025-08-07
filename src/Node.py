@@ -143,7 +143,7 @@ class RenderNode(Node):
                 self.shader.setVec3(f"directionalLights[{numDirectional}].ambient", light.color*0.2)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].diffuse", light.color*0.5)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].specular", Vector3(1.0))
-                self.shader.setVec3(f"directionalLights[{numDirectional}].direction", light.worldPosition)
+                self.shader.setVec3(f"directionalLights[{numDirectional}].direction", light.worldPosition.normalize())
                 self.shader.setMat4(f"directionalLights[{numDirectional}].lightSpaceMatrix", light.lightSpaceMatrix)
                 self.shader.setInt(f"directionalLights[{numDirectional}].shadowMap", 2+lightNum)
                 numDirectional+=1
