@@ -5,6 +5,7 @@ out vec4 FragColor;
 struct Material {
     sampler2D diffuse;
     sampler2D specular;
+    sampler2D normal;
     float shininess;
 }; 
 uniform Material material;
@@ -40,7 +41,7 @@ uniform DirectionalLight[NUM_DIRECTIONAL_LIGHTS] directionalLights;
 uniform vec3 viewPos;
 in vec2 TexCoord;
 in vec3 FragPos; 
-in vec3 Normal; 
+in mat3 TBN;
 
 vec3 sampleOffsetDirections[20] = vec3[]
 (
@@ -128,7 +129,7 @@ vec3 directionalLight(DirectionalLight light, vec3 normal, vec3 fragPos, vec3 vi
 void main()
 {
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 norm = normalize(Normal);
+    vec3 norm = normalize(TBN * (texture(material.normal, TexCoord).xyz*2.0 - 1.0));
     vec3 color = vec3(0.0);
 
     for(int i = 0; i < NUM_DIRECTIONAL_LIGHTS; i++)

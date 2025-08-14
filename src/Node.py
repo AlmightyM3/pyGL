@@ -116,12 +116,13 @@ class Node:
         return None
 
 class RenderNode(Node):
-    def __init__(self, mesh:Mesh,shader:Shader,diffuseTexture:Texture,specularTexture:Texture, name="Unnamed RenderNode"): #meshPath="", diffusePath=f"{dirPath}/assets/blank.PNG", specularPath=f"{dirPath}/assets/blank.PNG"
+    def __init__(self, mesh:Mesh,shader:Shader,diffuseTexture:Texture,specularTexture:Texture,normalTexture:Texture, name="Unnamed RenderNode"): #meshPath="", diffusePath=f"{dirPath}/assets/blank.PNG", specularPath=f"{dirPath}/assets/blank.PNG"
         super().__init__(name)
         self.mesh = mesh #Mesh(meshPath)
 
         self.diffuseTexture = diffuseTexture #Texture(diffusePath, GL.GL_RGBA)
         self.specularTexture = specularTexture #Texture(specularPath, GL.GL_RGBA)
+        self.normalTexture = normalTexture
 
         self.shader = shader #Shader(f"{dirPath}/src/shaders/shader.vert", f"{dirPath}/src/shaders/shader.frag")
     
@@ -137,7 +138,7 @@ class RenderNode(Node):
         for light in lights:
             lightNum = numDirectional+numPoint
 
-            GL.glActiveTexture(GL.GL_TEXTURE2+lightNum)
+            GL.glActiveTexture(GL.GL_TEXTURE3+lightNum)
             if light.isDirectional:
                 GL.glBindTexture(GL.GL_TEXTURE_2D, light.depthMap)
                 self.shader.setVec3(f"directionalLights[{numDirectional}].ambient", light.color*0.2)
@@ -145,7 +146,7 @@ class RenderNode(Node):
                 self.shader.setVec3(f"directionalLights[{numDirectional}].specular", Vector3(1.0))
                 self.shader.setVec3(f"directionalLights[{numDirectional}].direction", light.worldPosition.normalize())
                 self.shader.setMat4(f"directionalLights[{numDirectional}].lightSpaceMatrix", light.lightSpaceMatrix)
-                self.shader.setInt(f"directionalLights[{numDirectional}].shadowMap", 2+lightNum)
+                self.shader.setInt(f"directionalLights[{numDirectional}].shadowMap", 3+lightNum)
                 numDirectional+=1
             else:
                 GL.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, light.depthMap)
@@ -155,15 +156,17 @@ class RenderNode(Node):
                 self.shader.setVec3(f"pointLights[{numPoint}].position", light.worldPosition)
                 self.shader.setFloat(f"pointLights[{numPoint}].falloff", light.falloff)
                 self.shader.setFloat(f"pointLights[{numPoint}].farPlane", 15)
-                self.shader.setInt(f"pointLights[{numPoint}].shadowMap", 2+lightNum)
+                self.shader.setInt(f"pointLights[{numPoint}].shadowMap", 3+lightNum)
                 numPoint+=1
         
         self.shader.setInt("material.diffuse", 0)
         self.shader.setInt("material.specular", 1)
+        self.shader.setInt("material.normal", 2)
         self.shader.setFloat("material.shininess", 32.0)
 
         self.diffuseTexture.use(0)
         self.specularTexture.use(1)
+        self.normalTexture.use(2)
         
         self.mesh.render()
     
